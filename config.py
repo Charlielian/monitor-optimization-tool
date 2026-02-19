@@ -56,11 +56,11 @@ class Config:
 
         # MySQL配置
         mysql_defaults = {
-            "host": "192.168.31.175",
+            "host": "localhost",
             "port": 3306,
             "database": "optimization_toolbox",
             "user": "root",
-            "password": "103001"
+            "password": "root"
         }
         self.mysql_config: Dict[str, Any] = {**mysql_defaults, **data.get("mysql_config", {})}
 
