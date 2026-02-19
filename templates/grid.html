@@ -1,0 +1,1191 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  /* 强制覆盖base.html的padding，充分利用宽屏空间 */
+  body main.container-fluid.px-4 {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    max-width: 100% !important;
+  }
+  
+  /* 针对grid.html的容器进一步优化 */
+  .grid-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  /* 针对超宽屏幕优化 */
+  @media (min-width: 1400px) {
+    body main.container-fluid.px-4 {
+      padding-left: 15px !important;
+      padding-right: 15px !important;
+    }
+  }
+  
+  @media (min-width: 1920px) {
+    body main.container-fluid.px-4 {
+      padding-left: 20px !important;
+      padding-right: 20px !important;
+    }
+  }
+  
+  @media (min-width: 2560px) {
+    body main.container-fluid.px-4 {
+      padding-left: 30px !important;
+      padding-right: 30px !important;
+    }
+  }
+  
+  /* 高负荷和故障标签样式 */
+  .badge.bg-success {
+    background-color: #198754 !important;
+    color: white !important;
+  }
+  
+  .badge.bg-primary {
+    background-color: #0d6efd !important;
+    color: white !important;
+  }
+</style>
+
+<script>
+  // 使用JavaScript确保样式生效
+  document.addEventListener('DOMContentLoaded', function() {
+    const main = document.querySelector('main.container-fluid');
+    if (main) {
+      main.style.paddingLeft = '10px';
+      main.style.paddingRight = '10px';
+      main.style.maxWidth = '100%';
+      
+      // 根据屏幕宽度调整
+      const width = window.innerWidth;
+      if (width >= 2560) {
+        main.style.paddingLeft = '30px';
+        main.style.paddingRight = '30px';
+      } else if (width >= 1920) {
+        main.style.paddingLeft = '20px';
+        main.style.paddingRight = '20px';
+      } else if (width >= 1400) {
+        main.style.paddingLeft = '15px';
+        main.style.paddingRight = '15px';
+      }
+    }
+  });
+</script>
+
+<div class="container-fluid grid-container">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">
+          <i class="bi bi-grid-3x3-gap-fill me-2"></i>网格监控
+        </h2>
+        <div class="btn-group">
+          {% if user_role == 'admin' %}
+          <a href="{{ url_for('grid.all_grids_health_check') }}" class="btn btn-primary">
+            <i class="bi bi-heart-pulse"></i> 全量网格体检
+          </a>
+          {% endif %}
+          <a href="{{ url_for('grid.hsr_health_check') }}" class="btn btn-info ms-2">
+            <i class="bi bi-railway"></i> 高铁小区健康检查
+          </a>
+          <button type="button" class="btn btn-warning ms-2" data-bs-toggle="modal" data-bs-target="#guaranteeSceneModal">
+            <i class="bi bi-shield-check"></i> 保障小区体检
+          </button>
+          <button type="button" class="btn btn-success ms-2" data-bs-toggle="modal" data-bs-target="#exportSceneModal">
+            <i class="bi bi-download"></i> 直接导出
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 仪表盘统计 -->
+  {% if dashboard_stats %}
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="btn-group" role="group">
+        <a href="{{ url_for('grid.grid', search=search or '', comparison_mode='daily') }}" 
+           class="btn btn-sm {% if comparison_mode == 'daily' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+          <i class="bi bi-calendar-day me-1"></i>天级对比
+        </a>
+        <a href="{{ url_for('grid.grid', search=search or '', comparison_mode='current') }}" 
+           class="btn btn-sm {% if comparison_mode == 'current' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+          <i class="bi bi-clock-history me-1"></i>当前对比
+        </a>
+      </div>
+      <small class="text-muted ms-3">
+        {% if comparison_mode == 'current' %}
+        当前对比：当天累计 vs 前7天同时段日均
+        {% else %}
+        天级对比：昨天 vs 前7天日均
+        {% endif %}
+      </small>
+    </div>
+  </div>
+  
+  <div class="row mb-4">
+    <!-- 网格数量与督办标签 -->
+    <div class="col-md-3 mb-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="d-flex justify-content-around align-items-start">
+            <div>
+              <i class="bi bi-grid-3x3-gap text-primary" style="font-size: 2rem;"></i>
+              <h3 class="mt-2 mb-0">{{ dashboard_stats.total_grids }}</h3>
+              <p class="text-muted mb-0 small">网格总数</p>
+            </div>
+            <div class="border-start ps-3">
+              <i class="bi bi-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
+              <h3 class="mt-2 mb-0">{{ dashboard_stats.supervision_count }}</h3>
+              <p class="text-muted mb-0 small">督办标签</p>
+              <small class="text-muted">{{ dashboard_stats.supervision_grids_count }}个网格</small>
+            </div>
+          </div>
+          {% if dashboard_stats.supervision_tags and dashboard_stats.supervision_tags|length > 0 %}
+          <hr class="my-2">
+          <div class="small text-start" style="max-height: 100px; overflow-y: auto;">
+            {% for tag in dashboard_stats.supervision_tags[:5] %}
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="badge bg-warning text-dark">{{ tag.grid_pp }}</span>
+              <span class="text-muted">{{ tag.count }}</span>
+            </div>
+            {% endfor %}
+            {% if dashboard_stats.supervision_tags|length > 5 %}
+            <small class="text-muted">还有 {{ dashboard_stats.supervision_tags|length - 5 }} 个标签...</small>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- 问题标签统计 + 故障统计 -->
+    <div class="col-md-9 mb-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="d-flex justify-content-around align-items-start">
+            <div class="text-center">
+              <i class="bi bi-graph-down text-warning" style="font-size: 1.8rem;"></i>
+              <p class="text-warning mb-1 small">流量劣化</p>
+              <h4 class="mb-0"><strong>{{ dashboard_stats.traffic_degraded_grids|length if dashboard_stats.traffic_degraded_grids else 0 }}</strong></h4>
+              <small class="text-muted">个网格</small>
+            </div>
+            <div class="text-center border-start border-end px-3">
+              <i class="bi bi-wifi-off text-info" style="font-size: 1.8rem;"></i>
+              <p class="text-info mb-1 small">无流量增加</p>
+              <h4 class="mb-0"><strong>{{ dashboard_stats.no_traffic_increased_grids|length if dashboard_stats.no_traffic_increased_grids else 0 }}</strong></h4>
+              <small class="text-muted">个网格</small>
+            </div>
+            <div class="text-center border-start border-end px-3">
+              <i class="bi bi-thermometer-high text-danger" style="font-size: 1.8rem;"></i>
+              <p class="text-danger mb-1 small">高负荷小区</p>
+              <h4 class="mb-0"><strong>{{ dashboard_stats.high_load_4g_cells + dashboard_stats.high_load_5g_cells }}</strong></h4>
+              <small class="text-muted">{{ dashboard_stats.high_load_grids|length if dashboard_stats.high_load_grids else 0 }}个网格</small>
+            </div>
+            <div class="text-center">
+              <i class="bi bi-x-circle text-danger" style="font-size: 1.8rem;"></i>
+              <p class="text-danger mb-1 small">故障数量</p>
+              <h4 class="mb-0"><strong>{{ dashboard_stats.fault_count }}</strong></h4>
+              <small class="text-muted">{{ dashboard_stats.fault_grids|length if dashboard_stats.fault_grids else 0 }}个网格</small>
+            </div>
+          </div>
+          {% if dashboard_stats.issue_tag_stats %}
+          <hr class="my-2">
+          <div class="small text-start" style="max-height: 220px; overflow-y: auto;">
+            <table class="table table-sm table-bordered mb-0" style="font-size: 0.75rem;">
+              <thead>
+                <tr class="table-light">
+                  <th style="width: 25%;">问题类型</th>
+                  <th style="width: 19%;">2024遗留</th>
+                  <th style="width: 19%;">2025督办</th>
+                  <th style="width: 19%;">2026督办</th>
+                  <th style="width: 18%;">其他</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="text-warning"><strong>流量劣化</strong></td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('流量劣化', {}).get('2024年遗留督办网格', 0) }}</td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('流量劣化', {}).get('2025年督办网格', 0) }}</td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('流量劣化', {}).get('2026年督办网格', 0) }}</td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('流量劣化', {}).get('其他', 0) }}</td>
+                </tr>
+                <tr>
+                  <td class="text-info"><strong>无流量增加</strong></td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('无流量增加', {}).get('2024年遗留督办网格', 0) }}</td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('无流量增加', {}).get('2025年督办网格', 0) }}</td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('无流量增加', {}).get('2026年督办网格', 0) }}</td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('无流量增加', {}).get('其他', 0) }}</td>
+                </tr>
+                <tr>
+                  <td class="text-danger"><strong>高负荷小区</strong></td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('高负荷小区', {}).get('2024年遗留督办网格', 0) }}</td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('高负荷小区', {}).get('2025年督办网格', 0) }}</td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('高负荷小区', {}).get('2026年督办网格', 0) }}</td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('高负荷小区', {}).get('其他', 0) }}</td>
+                </tr>
+                <tr>
+                  <td class="text-danger"><strong>故障</strong></td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('故障', {}).get('2024年遗留督办网格', 0) }}</td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('故障', {}).get('2025年督办网格', 0) }}</td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('故障', {}).get('2026年督办网格', 0) }}</td>
+                  <td class="text-center">{{ dashboard_stats.issue_tag_stats.get('故障', {}).get('其他', 0) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 告警指标 -->
+  <div class="row mb-4">
+    <!-- 流量劣化 -->
+    <div class="col-xl-3 col-lg-6 mb-3">
+      <div class="card shadow-sm h-100 {% if dashboard_stats.traffic_degraded_grids and dashboard_stats.traffic_degraded_grids|length > 0 %}border-warning{% endif %}">
+        <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">
+            <i class="bi bi-arrow-down-circle me-2"></i>流量劣化网格
+          </h6>
+          {% if dashboard_stats.traffic_degraded_grids and dashboard_stats.traffic_degraded_grids|length > 0 %}
+          <a href="{{ url_for('grid.export_traffic_degraded') }}" class="btn btn-sm btn-light" title="下载Excel">
+            <i class="bi bi-download"></i>
+          </a>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <h2 class="mb-1">{{ dashboard_stats.traffic_degraded_grids|length if dashboard_stats.traffic_degraded_grids else 0 }}</h2>
+          <p class="text-muted mb-0 small">流量下降 ≥30% 的网格（{% if comparison_mode == 'current' %}当天 vs 前7天同时段{% else %}昨天 vs 前7天日均{% endif %}）</p>
+          {% if dashboard_stats.traffic_degraded_grids and dashboard_stats.traffic_degraded_grids|length > 0 %}
+          <hr>
+          <div class="small" style="max-height: 150px; overflow-y: auto;">
+            {% for grid in dashboard_stats.traffic_degraded_grids[:5] %}
+            <div class="mb-2">
+              <strong>{{ grid.grid_id }}</strong>
+              {% if grid.grid_name and grid.grid_name != grid.grid_id %}
+              <span class="text-muted">- {{ grid.grid_name }}</span>
+              {% endif %}
+              {% if grid.grid_pp %}
+              <span class="badge bg-secondary ms-1">{{ grid.grid_pp }}</span>
+              {% endif %}
+              <span class="{% if grid.change_rate|abs >= 50 %}text-danger fw-bold{% else %}text-warning{% endif %} ms-2">劣化 {{ "%.1f"|format(grid.change_rate|abs) }}%</span>
+              <span class="text-muted ms-1">({{ grid.comparison_traffic|smart_traffic }} → {{ grid.past_7days_avg_traffic|smart_traffic }})</span>
+            </div>
+            {% endfor %}
+            {% if dashboard_stats.traffic_degraded_grids|length > 5 %}
+            <small class="text-muted">还有 {{ dashboard_stats.traffic_degraded_grids|length - 5 }} 个网格...</small>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- 无性能小区增加 -->
+    <div class="col-xl-3 col-lg-6 mb-3">
+      <div class="card shadow-sm h-100 {% if dashboard_stats.no_traffic_increased_grids and dashboard_stats.no_traffic_increased_grids|length > 0 %}border-info{% endif %}">
+        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">
+            <i class="bi bi-signal me-2"></i>无流量小区增加
+          </h6>
+          {% if dashboard_stats.no_traffic_increased_grids and dashboard_stats.no_traffic_increased_grids|length > 0 %}
+          <a href="{{ url_for('grid.export_no_traffic_increased') }}" class="btn btn-sm btn-light" title="下载Excel">
+            <i class="bi bi-download"></i>
+          </a>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <h2 class="mb-1">{{ dashboard_stats.no_traffic_increased_grids|length if dashboard_stats.no_traffic_increased_grids else 0 }}</h2>
+          <p class="text-muted mb-0 small">无流量小区占比增加 ≥30% 的网格（{% if comparison_mode == 'current' %}当天 vs 前7天同时段{% else %}昨天 vs 前7天日均{% endif %}）</p>
+          {% if dashboard_stats.no_traffic_increased_grids and dashboard_stats.no_traffic_increased_grids|length > 0 %}
+          <hr>
+          <div class="small" style="max-height: 150px; overflow-y: auto;">
+            {% for grid in dashboard_stats.no_traffic_increased_grids[:5] %}
+            <div class="mb-2">
+              <strong>{{ grid.grid_id }}</strong>
+              {% if grid.grid_name and grid.grid_name != grid.grid_id %}
+              <span class="text-muted">- {{ grid.grid_name }}</span>
+              {% endif %}
+              {% if grid.grid_pp %}
+              <span class="badge bg-secondary ms-1">{{ grid.grid_pp }}</span>
+              {% endif %}
+              <span class="text-info ms-2">+{{ "%.1f"|format(grid.increase_rate) }}%</span>
+              <span class="text-muted ms-1">({{ "%.1f"|format(grid.past_7days_avg_no_traffic) }} → {{ grid.comparison_no_traffic_count }} 无流量，共{{ grid.total_cells }}小区)</span>
+            </div>
+            {% endfor %}
+            {% if dashboard_stats.no_traffic_increased_grids|length > 5 %}
+            <small class="text-muted">还有 {{ dashboard_stats.no_traffic_increased_grids|length - 5 }} 个网格...</small>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- 高负荷小区 -->
+    <div class="col-xl-3 col-lg-6 mb-3">
+      <div class="card shadow-sm h-100 {% if (dashboard_stats.high_load_4g_cells + dashboard_stats.high_load_5g_cells) > 0 %}border-danger{% endif %}">
+        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">
+            <i class="bi bi-thermometer-high me-2"></i>高负荷小区
+          </h6>
+          {% if dashboard_stats.high_load_grids and dashboard_stats.high_load_grids|length > 0 %}
+          <a href="{{ url_for('grid.export_high_load') }}" class="btn btn-sm btn-light" title="下载Excel">
+            <i class="bi bi-download"></i>
+          </a>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <h2 class="mb-1">{{ dashboard_stats.high_load_4g_cells + dashboard_stats.high_load_5g_cells }}</h2>
+          <p class="text-muted mb-0 small">PRB忙时利用率 >50% 的小区（4G: {{ dashboard_stats.high_load_4g_cells }}，5G: {{ dashboard_stats.high_load_5g_cells }}）</p>
+          {% if dashboard_stats.high_load_grids and dashboard_stats.high_load_grids|length > 0 %}
+          <hr>
+          <div class="small" style="max-height: 150px; overflow-y: auto;">
+            {% for grid in dashboard_stats.high_load_grids[:5] %}
+            <div class="mb-2">
+              <strong>{{ grid.grid_id }}</strong>
+              {% if grid.grid_name and grid.grid_name != grid.grid_id %}
+              <span class="text-muted">- {{ grid.grid_name }}</span>
+              {% endif %}
+              {% if grid.grid_pp %}
+              <span class="badge bg-secondary ms-1">{{ grid.grid_pp }}</span>
+              {% endif %}
+              <span class="text-danger ms-2">{{ grid.total_high_load }}个高负荷</span>
+              <span class="text-muted ms-1">(4G: <span class="text-info">{{ grid.high_load_4g }}</span>, 5G: <span class="text-success">{{ grid.high_load_5g }}</span>，共{{ grid.total_cells }}小区)</span>
+            </div>
+            {% endfor %}
+            {% if dashboard_stats.high_load_grids|length > 5 %}
+            <small class="text-muted">还有 {{ dashboard_stats.high_load_grids|length - 5 }} 个网格...</small>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- 告警Top网格 -->
+    <div class="col-xl-3 col-lg-6 mb-3">
+      <div class="card shadow-sm h-100 {% if dashboard_stats.fault_count > 0 %}border-danger{% endif %}">
+        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">
+            <i class="bi bi-exclamation-octagon me-2"></i>告警Top网格
+          </h6>
+          {% if dashboard_stats.fault_grids_detail and dashboard_stats.fault_grids_detail|length > 0 %}
+          <a href="{{ url_for('grid.export_fault_grids') }}" class="btn btn-sm btn-light" title="下载Excel">
+            <i class="bi bi-download"></i>
+          </a>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <h2 class="mb-1">{{ dashboard_stats.fault_count }}</h2>
+          <p class="text-muted mb-0 small">影响性能的故障小区数（{{ dashboard_stats.fault_grids|length if dashboard_stats.fault_grids else 0 }}个网格）</p>
+          {% if dashboard_stats.fault_grids_detail and dashboard_stats.fault_grids_detail|length > 0 %}
+          <hr>
+          <div class="small" style="max-height: 150px; overflow-y: auto;">
+            {% for grid in dashboard_stats.fault_grids_detail[:5] %}
+            <div class="mb-2">
+              <strong>{{ grid.grid_id }}</strong>
+              {% if grid.grid_name and grid.grid_name != grid.grid_id %}
+              <span class="text-muted">- {{ grid.grid_name }}</span>
+              {% endif %}
+              {% if grid.grid_pp %}
+              <span class="badge bg-warning text-dark ms-1">{{ grid.grid_pp }}</span>
+              {% endif %}
+              <span class="text-danger ms-2">{{ grid.fault_count }}个故障</span>
+            </div>
+            {% endfor %}
+            {% if dashboard_stats.fault_grids_detail|length > 5 %}
+            <small class="text-muted">还有 {{ dashboard_stats.fault_grids_detail|length - 5 }} 个网格...</small>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 搜索和筛选 -->
+  <div class="row mb-5" style="margin-bottom: 3rem !important; position: relative; z-index: 1050;">
+    <div class="col-12">
+      <div class="card shadow-sm" style="position: relative; z-index: 1050; overflow: visible;">
+        <div class="card-body" style="overflow: visible;">
+          <form id="gridSearchForm" class="row g-3">
+            <div class="col-md-4" style="position: relative; z-index: 1060;">
+              <label class="form-label">搜索网格
+                {% if search %}
+                <span class="badge bg-success ms-2">
+                  <i class="bi bi-check-circle me-1"></i>已搜索: {{ search }}
+                </span>
+                {% endif %}
+              </label>
+              <div class="position-relative" style="z-index: 1060;">
+                <input type="text" 
+                       class="form-control {% if search %}border-success{% endif %}" 
+                       id="gridSearchInput"
+                       name="search" 
+                       value="{{ search or '' }}" 
+                       placeholder="输入网格ID或网格名称"
+                       autocomplete="off">
+                <!-- 自动联想下拉框 -->
+                <div id="autocompleteDropdown" 
+                     class="list-group position-absolute w-100" 
+                     style="display: none; z-index: 99999; max-height: 300px; overflow-y: auto; box-shadow: 0 8px 16px rgba(0,0,0,0.2); background-color: white; border: 1px solid #dee2e6; border-radius: 0.25rem; margin-top: 2px;">
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-search me-1"></i>搜索
+              </button>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button type="button" id="clearSearchBtn" class="btn btn-outline-secondary w-100" style="display: none;">
+                <i class="bi bi-x-circle me-1"></i>清除
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // 网格搜索功能（AJAX局部更新）
+  (function() {
+    const searchForm = document.getElementById('gridSearchForm');
+    const searchInput = document.getElementById('gridSearchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    const dropdown = document.getElementById('autocompleteDropdown');
+    let debounceTimer = null;
+    
+    // 搜索表单提交（AJAX）
+    searchForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const searchValue = searchInput.value.trim();
+      performSearch(searchValue);
+    });
+    
+    // 清除搜索
+    clearBtn.addEventListener('click', function() {
+      searchInput.value = '';
+      clearBtn.style.display = 'none';
+      performSearch('');
+    });
+    
+    // 监听输入变化，显示/隐藏清除按钮
+    searchInput.addEventListener('input', function() {
+      if (this.value.trim()) {
+        clearBtn.style.display = 'block';
+      } else {
+        clearBtn.style.display = 'none';
+      }
+    });
+    
+    // 初始化清除按钮状态
+    if (searchInput.value.trim()) {
+      clearBtn.style.display = 'block';
+    }
+    
+    // 执行搜索（AJAX）
+    async function performSearch(query) {
+      try {
+        // 显示加载状态
+        const gridListCard = document.querySelector('.card.shadow-sm:has(.table)');
+        if (gridListCard) {
+          gridListCard.style.opacity = '0.6';
+          gridListCard.style.pointerEvents = 'none';
+        }
+        
+        // 发送AJAX请求
+        const url = query ? `{{ url_for('grid.grid') }}?search=${encodeURIComponent(query)}` : '{{ url_for('grid.grid') }}';
+        const response = await fetch(url, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('搜索请求失败');
+        }
+        
+        const html = await response.text();
+        
+        // 解析HTML，提取网格列表部分
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newGridList = doc.querySelector('.card.shadow-sm:has(.table)');
+        
+        if (newGridList && gridListCard) {
+          // 只更新网格列表部分
+          gridListCard.innerHTML = newGridList.innerHTML;
+          gridListCard.style.opacity = '1';
+          gridListCard.style.pointerEvents = 'auto';
+          
+          // 重新初始化表格过滤功能
+          initTableFilters();
+        }
+        
+      } catch (error) {
+        console.error('搜索失败:', error);
+        alert('搜索失败，请重试');
+        if (gridListCard) {
+          gridListCard.style.opacity = '1';
+          gridListCard.style.pointerEvents = 'auto';
+        }
+      }
+    }
+    
+    // 防抖函数
+    function debounce(func, delay) {
+      return function() {
+        const context = this;
+        const args = arguments;
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => func.apply(context, args), delay);
+      };
+    }
+    
+    // 获取自动联想数据
+    async function fetchAutocomplete(query) {
+      if (!query || query.length < 1) {
+        dropdown.style.display = 'none';
+        return;
+      }
+      
+      try {
+        const response = await fetch(`{{ url_for('grid.grid_autocomplete') }}?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        
+        if (data.length > 0) {
+          renderDropdown(data);
+        } else {
+          dropdown.style.display = 'none';
+        }
+      } catch (error) {
+        console.error('自动联想请求失败:', error);
+        dropdown.style.display = 'none';
+      }
+    }
+    
+    // 渲染下拉框
+    function renderDropdown(items) {
+      dropdown.innerHTML = '';
+      
+      items.forEach(item => {
+        const itemDiv = document.createElement('a');
+        itemDiv.href = '#';
+        itemDiv.className = 'list-group-item list-group-item-action';
+        itemDiv.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <strong>${item.id}</strong>
+              ${item.name !== item.id ? `<span class="text-muted"> - ${item.name}</span>` : ''}
+            </div>
+            <div>
+              <span class="badge bg-info me-1">4G: ${item.cell_4g_count}</span>
+              <span class="badge bg-success">5G: ${item.cell_5g_count}</span>
+            </div>
+          </div>
+        `;
+        
+        itemDiv.addEventListener('click', (e) => {
+          e.preventDefault();
+          searchInput.value = item.id;
+          dropdown.style.display = 'none';
+          clearBtn.style.display = 'block';
+          // 自动搜索
+          performSearch(item.id);
+        });
+        
+        dropdown.appendChild(itemDiv);
+      });
+      
+      dropdown.style.display = 'block';
+    }
+    
+    // 监听输入事件
+    searchInput.addEventListener('input', debounce(function() {
+      fetchAutocomplete(this.value);
+    }, 300));
+    
+    // 点击输入框时，如果有值则显示联想
+    searchInput.addEventListener('focus', function() {
+      if (this.value.length >= 1) {
+        fetchAutocomplete(this.value);
+      }
+    });
+    
+    // 点击页面其他地方时隐藏下拉框
+    document.addEventListener('click', function(e) {
+      if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+    
+    // 键盘导航支持
+    let selectedIndex = -1;
+    searchInput.addEventListener('keydown', function(e) {
+      const items = dropdown.querySelectorAll('.list-group-item');
+      
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+        updateSelection(items);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedIndex = Math.max(selectedIndex - 1, -1);
+        updateSelection(items);
+      } else if (e.key === 'Enter' && selectedIndex >= 0) {
+        e.preventDefault();
+        items[selectedIndex].click();
+      } else if (e.key === 'Escape') {
+        dropdown.style.display = 'none';
+        selectedIndex = -1;
+      }
+    });
+    
+    function updateSelection(items) {
+      items.forEach((item, index) => {
+        if (index === selectedIndex) {
+          item.classList.add('active');
+          item.scrollIntoView({ block: 'nearest' });
+        } else {
+          item.classList.remove('active');
+        }
+      });
+    }
+  })();
+  
+  // 表格过滤功能
+  function initTableFilters() {
+    const filterInputs = {
+      'filter-grid-id': 0,
+      'filter-grid-name': 1,
+      'filter-grid-tag': 2,
+      'filter-unit': 3,
+      'filter-person': 4
+    };
+    
+    console.log('初始化表格过滤功能');
+    
+    // 过滤表格函数
+    function filterTable() {
+      // 精确选择网格列表的表格（通过父容器的特征）
+      const gridListCard = document.querySelector('.card-header .bi-list-ul');
+      if (!gridListCard) return;
+      
+      const currentTable = gridListCard.closest('.card').querySelector('.table');
+      if (!currentTable) return;
+      
+      const currentTbody = currentTable.querySelector('tbody');
+      if (!currentTbody) return;
+      
+      const rows = Array.from(currentTbody.querySelectorAll('tr:not(.no-result-row)'));
+      
+      console.log('表格信息:');
+      console.log('- tbody中的所有tr:', currentTbody.querySelectorAll('tr').length);
+      console.log('- 过滤后的tr:', rows.length);
+      if (rows.length > 0) {
+        console.log('- 第一行的第一个单元格:', rows[0].cells[0]?.textContent.trim());
+        console.log('- 第一行的单元格数:', rows[0].cells.length);
+      }
+      
+      const filters = {};
+      let hasActiveFilter = false;
+      
+      Object.keys(filterInputs).forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input && input.value.trim()) {
+          filters[filterInputs[inputId]] = input.value.trim().toLowerCase();
+          hasActiveFilter = true;
+        }
+      });
+      
+      console.log('应用过滤:', filters, '共', rows.length, '行');
+      let visibleCount = 0;
+      
+      rows.forEach((row, rowIndex) => {
+        let shouldShow = true;
+        
+        console.log(`\n检查第${rowIndex}行，共${row.cells.length}个单元格`);
+        
+        Object.keys(filters).forEach(colIndex => {
+          const cell = row.cells[colIndex];
+          if (!cell) {
+            console.log(`列${colIndex}: 单元格不存在`);
+            return;
+          }
+          
+          const cellText = cell.textContent.trim().toLowerCase();
+          const filterValue = filters[colIndex];
+          
+          console.log(`列${colIndex}: "${cellText}" ${cellText.includes(filterValue) ? '✓包含' : '✗不包含'} "${filterValue}"`);
+          
+          if (!cellText.includes(filterValue)) {
+            shouldShow = false;
+          }
+        });
+        
+        row.style.display = shouldShow ? '' : 'none';
+        if (shouldShow) visibleCount++;
+      });
+      
+      console.log('过滤完成，显示', visibleCount, '/', rows.length, '行');
+      
+      const badge = document.querySelector('.card-header .badge');
+      if (badge) {
+        if (hasActiveFilter) {
+          badge.textContent = `显示 ${visibleCount} / ${rows.length} 个网格`;
+          badge.classList.remove('bg-light', 'text-dark');
+          badge.classList.add('bg-warning', 'text-dark');
+        } else {
+          badge.textContent = `共 ${rows.length} 个网格`;
+          badge.classList.remove('bg-warning');
+          badge.classList.add('bg-light', 'text-dark');
+        }
+      }
+      
+      const oldNoResultRow = currentTbody.querySelector('.no-result-row');
+      if (oldNoResultRow) oldNoResultRow.remove();
+      
+      if (visibleCount === 0 && hasActiveFilter) {
+        const noResultRow = document.createElement('tr');
+        noResultRow.className = 'no-result-row';
+        noResultRow.innerHTML = '<td colspan="8" class="text-center py-4 text-muted"><i class="bi bi-search" style="font-size: 2rem;"></i><p class="mt-2">没有找到匹配的网格</p></td>';
+        currentTbody.appendChild(noResultRow);
+      }
+    }
+    
+    Object.keys(filterInputs).forEach(inputId => {
+      const input = document.getElementById(inputId);
+      if (input) {
+        input.oninput = debounceFilter(function() {
+          console.log('过滤触发:', inputId, '=', this.value);
+          filterTable();
+        }, 300);
+      }
+    });
+    
+    const clearFiltersBtn = document.getElementById('clear-filters');
+    if (clearFiltersBtn) {
+      clearFiltersBtn.onclick = function() {
+        Object.keys(filterInputs).forEach(inputId => {
+          const input = document.getElementById(inputId);
+          if (input) input.value = '';
+        });
+        filterTable();
+      };
+    }
+  }
+  
+  function debounceFilter(func, delay) {
+    let timer = null;
+    return function() {
+      clearTimeout(timer);
+      timer = setTimeout(() => func.apply(this, arguments), delay);
+    };
+  }
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    initTableFilters();
+    
+    // 如果有搜索结果，自动滚动到搜索的网格并高亮显示
+    const searchedGrid = document.getElementById('searched-grid');
+    if (searchedGrid) {
+      // 延迟滚动，确保页面完全加载
+      setTimeout(function() {
+        searchedGrid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // 添加闪烁动画效果
+        let blinkCount = 0;
+        const blinkInterval = setInterval(function() {
+          searchedGrid.classList.toggle('table-warning');
+          blinkCount++;
+          if (blinkCount >= 6) {
+            clearInterval(blinkInterval);
+            searchedGrid.classList.add('table-warning');
+          }
+        }, 300);
+      }, 300);
+    }
+  });
+  </script>
+
+  <!-- 网格列表 -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm" style="position: relative; z-index: 1;">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-list-ul me-2"></i>网格列表
+            {% if search %}
+            <span class="badge bg-success ms-2">搜索结果: {{ grids|length }} 个网格</span>
+            {% else %}
+            <span class="badge bg-light text-dark ms-2">共 {{ grids|length }} 个网格</span>
+            {% endif %}
+          </h5>
+        </div>
+        <div class="card-body p-0">
+          {% if grids %}
+          <div class="table-responsive" style="max-height: 600px; overflow-y: auto; position: relative;">
+            <table class="table table-hover table-striped mb-0">
+              <thead class="table-light">
+                <tr style="position: sticky; top: 0; z-index: 10; background-color: #f8f9fa; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <th style="width: 12%; padding: 12px 8px;">网格ID</th>
+                  <th style="width: 15%; padding: 12px 8px;">网格名称</th>
+                  <th style="width: 12%; padding: 12px 8px;">网格标签</th>
+                  <th style="width: 10%; padding: 12px 8px;">归属单位</th>
+                  <th style="width: 10%; padding: 12px 8px;">责任人</th>
+                  <th style="width: 8%; padding: 12px 8px;" class="text-center">总小区</th>
+                  <th style="width: 26%; padding: 12px 8px;">问题标签</th>
+                  <th style="width: 7%; padding: 12px 8px;" class="text-center">操作</th>
+                </tr>
+                <!-- 过滤行 -->
+                <tr class="table-secondary" style="position: sticky; top: 46px; z-index: 9; background-color: #e2e3e5; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <th>
+                    <input type="text" class="form-control form-control-sm" id="filter-grid-id" placeholder="过滤网格ID">
+                  </th>
+                  <th>
+                    <input type="text" class="form-control form-control-sm" id="filter-grid-name" placeholder="过滤网格名称">
+                  </th>
+                  <th>
+                    <input type="text" class="form-control form-control-sm" id="filter-grid-tag" placeholder="过滤标签">
+                  </th>
+                  <th>
+                    <input type="text" class="form-control form-control-sm" id="filter-unit" placeholder="过滤单位">
+                  </th>
+                  <th>
+                    <input type="text" class="form-control form-control-sm" id="filter-person" placeholder="过滤责任人">
+                  </th>
+                  <th class="text-center">
+                    <button class="btn btn-sm btn-outline-secondary" id="clear-filters" title="清除所有过滤">
+                      <i class="bi bi-x-circle"></i>
+                    </button>
+                  </th>
+                  <th colspan="2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for grid in grids %}
+                <tr {% if search and search.lower() in grid.grid_id.lower() %}id="searched-grid" class="table-warning"{% endif %}>
+                  <td><strong>{{ grid.grid_id }}</strong></td>
+                  <td>
+                    {{ grid.grid_name or '-' }}
+                    {% if not grid.grid_name or grid.grid_name == grid.grid_id %}
+                    <span class="badge bg-warning text-dark ms-1" style="font-size: 0.7rem;">未设置</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if grid.grid_pp %}
+                      {% set tags = grid.grid_pp.split(',') %}
+                      {% for tag in tags %}
+                        {% if tag.strip() %}
+                        <span class="badge bg-warning text-dark me-1 mb-1">{{ tag.strip() }}</span>
+                        {% endif %}
+                      {% endfor %}
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <small>{{ grid.gird_dd or '-' }}</small>
+                  </td>
+                  <td>
+                    <small>{{ grid.grid_regration or '-' }}</small>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-secondary">{{ grid.total_cells }}</span>
+                  </td>
+                  <td>
+                    {% if grid.issues %}
+                      {% for issue in grid.issues %}
+                        <span class="badge bg-{{ issue.class }} me-1 mb-1">
+                          {{ issue.label }} {{ issue.detail }}
+                        </span>
+                      {% endfor %}
+                    {% else %}
+                      <span class="text-muted">-</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    <a href="{{ url_for('grid.grid_detail', grid_id=grid.grid_id) }}" 
+                       class="btn btn-sm btn-primary">
+                      <i class="bi bi-eye me-1"></i>查看详情
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+            <p class="text-muted mt-3">
+              {% if search %}
+              没有找到匹配的网格
+              {% else %}
+              暂无网格数据
+              {% endif %}
+            </p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 保障场景选择模态弹窗 -->
+<div class="modal fade" id="guaranteeSceneModal" tabindex="-1" aria-labelledby="guaranteeSceneModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-white">
+        <h5 class="modal-title" id="guaranteeSceneModalLabel">
+          <i class="bi bi-shield-check me-2"></i>保障场景选择
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="sceneLoading" class="text-center py-4">
+          <div class="spinner-border text-warning" role="status">
+            <span class="visually-hidden">加载中...</span>
+          </div>
+          <p class="mt-2 text-muted">正在加载保障场景...</p>
+        </div>
+        <div id="sceneContent" style="display: none;">
+          <p class="mb-3">请选择需要体检的保障场景：</p>
+          <div id="sceneList" class="space-y-2"></div>
+          <div id="noScenes" class="text-center py-4" style="display: none;">
+            <i class="bi bi-info-circle text-muted" style="font-size: 2rem;"></i>
+            <p class="mt-2 text-muted">没有找到可用的保障场景</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" id="confirmScenesBtn" class="btn btn-primary" disabled>
+          <i class="bi bi-check-circle"></i> 开始体检
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 保障场景选择逻辑
+  document.addEventListener('DOMContentLoaded', function() {
+    const guaranteeSceneModal = document.getElementById('guaranteeSceneModal');
+    const sceneLoading = document.getElementById('sceneLoading');
+    const sceneContent = document.getElementById('sceneContent');
+    const sceneList = document.getElementById('sceneList');
+    const noScenes = document.getElementById('noScenes');
+    const confirmScenesBtn = document.getElementById('confirmScenesBtn');
+    
+    // 当模态弹窗显示时加载场景列表
+    guaranteeSceneModal.addEventListener('shown.bs.modal', function() {
+      // 重置状态
+      sceneLoading.style.display = 'block';
+      sceneContent.style.display = 'none';
+      noScenes.style.display = 'none';
+      confirmScenesBtn.disabled = true;
+      
+      // 清空场景列表
+      sceneList.innerHTML = '';
+      
+      // 加载场景列表
+      fetch('/guarantee/scenes')
+        .then(response => response.json())
+        .then(data => {
+          sceneLoading.style.display = 'none';
+          sceneContent.style.display = 'block';
+          
+          const scenes = data.scenes || [];
+          
+          if (scenes.length === 0) {
+            noScenes.style.display = 'block';
+            return;
+          }
+          
+          // 渲染场景列表
+          scenes.forEach(scene => {
+            const sceneItem = document.createElement('div');
+            sceneItem.className = 'form-check';
+            sceneItem.innerHTML = `
+              <input class="form-check-input scene-checkbox" type="checkbox" value="${scene.scene_name}" id="scene-${scene.scene_name}">
+              <label class="form-check-label" for="scene-${scene.scene_name}">
+                ${scene.scene_name} <span class="badge bg-secondary">${scene.cell_count}个小区</span>
+              </label>
+            `;
+            sceneList.appendChild(sceneItem);
+          });
+          
+          // 监听场景选择变化
+          const checkboxes = document.querySelectorAll('.scene-checkbox');
+          checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateConfirmButtonStatus);
+          });
+        })
+        .catch(error => {
+          console.error('加载场景失败:', error);
+          sceneLoading.style.display = 'none';
+          noScenes.style.display = 'block';
+        });
+    });
+    
+    // 更新确认按钮状态
+    function updateConfirmButtonStatus() {
+      const checkedCheckboxes = document.querySelectorAll('.scene-checkbox:checked');
+      confirmScenesBtn.disabled = checkedCheckboxes.length === 0;
+    }
+    
+    // 确认场景选择并开始体检
+    confirmScenesBtn.addEventListener('click', function() {
+      const selectedScenes = [];
+      document.querySelectorAll('.scene-checkbox:checked').forEach(checkbox => {
+        selectedScenes.push(checkbox.value);
+      });
+      
+      if (selectedScenes.length > 0) {
+        // 构建URL并跳转到体检页面
+        let url = '/guarantee/health_check';
+        selectedScenes.forEach((scene, index) => {
+          url += (index === 0 ? '?' : '&') + 'scenes=' + encodeURIComponent(scene);
+        });
+        window.location.href = url;
+      }
+    });
+  });
+</script>
+
+<!-- 直接导出场景小区数据模态弹窗 -->
+<div class="modal fade" id="exportSceneModal" tabindex="-1" aria-labelledby="exportSceneModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="exportSceneModalLabel">
+          <i class="bi bi-download me-2"></i>直接导出场景数据
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="exportSceneLoading" class="text-center py-4">
+          <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">加载中...</span>
+          </div>
+          <p class="mt-2 text-muted">正在加载场景...</p>
+        </div>
+        <div id="exportSceneContent" style="display: none;">
+          <p class="mb-3">请选择需要导出的场景：</p>
+          <div id="exportSceneList" class="space-y-2"></div>
+          <div id="exportNoScenes" class="text-center py-4" style="display: none;">
+            <i class="bi bi-info-circle text-muted" style="font-size: 2rem;"></i>
+            <p class="mt-2 text-muted">没有找到可用的场景</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" id="exportScenesBtn" class="btn btn-primary" disabled>
+          <i class="bi bi-file-earmark-spreadsheet"></i> 导出Excel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 直接导出场景数据逻辑
+  document.addEventListener('DOMContentLoaded', function() {
+    const exportSceneModal = document.getElementById('exportSceneModal');
+    const exportSceneLoading = document.getElementById('exportSceneLoading');
+    const exportSceneContent = document.getElementById('exportSceneContent');
+    const exportSceneList = document.getElementById('exportSceneList');
+    const exportNoScenes = document.getElementById('exportNoScenes');
+    const exportScenesBtn = document.getElementById('exportScenesBtn');
+    
+    // 当模态弹窗显示时加载场景列表
+    exportSceneModal.addEventListener('shown.bs.modal', function() {
+      // 重置状态
+      exportSceneLoading.style.display = 'block';
+      exportSceneContent.style.display = 'none';
+      exportNoScenes.style.display = 'none';
+      exportScenesBtn.disabled = true;
+      
+      // 清空场景列表
+      exportSceneList.innerHTML = '';
+      
+      // 加载场景列表
+      fetch('/guarantee/scenes')
+        .then(response => response.json())
+        .then(data => {
+          exportSceneLoading.style.display = 'none';
+          exportSceneContent.style.display = 'block';
+          
+          const scenes = data.scenes || [];
+          
+          if (scenes.length === 0) {
+            exportNoScenes.style.display = 'block';
+            return;
+          }
+          
+          // 渲染场景列表
+          scenes.forEach(scene => {
+            const sceneItem = document.createElement('div');
+            sceneItem.className = 'form-check';
+            sceneItem.innerHTML = `
+              <input class="form-check-input export-scene-checkbox" type="checkbox" value="${scene.scene_name}" id="export-scene-${scene.scene_name}">
+              <label class="form-check-label" for="export-scene-${scene.scene_name}">
+                ${scene.scene_name} <span class="badge bg-secondary">${scene.cell_count}个小区</span>
+              </label>
+            `;
+            exportSceneList.appendChild(sceneItem);
+          });
+          
+          // 监听场景选择变化
+          const checkboxes = document.querySelectorAll('.export-scene-checkbox');
+          checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateExportButtonStatus);
+          });
+        })
+        .catch(error => {
+          console.error('加载场景失败:', error);
+          exportSceneLoading.style.display = 'none';
+          exportNoScenes.style.display = 'block';
+        });
+    });
+    
+    // 更新导出按钮状态
+    function updateExportButtonStatus() {
+      const checkedCheckboxes = document.querySelectorAll('.export-scene-checkbox:checked');
+      exportScenesBtn.disabled = checkedCheckboxes.length === 0;
+    }
+    
+    // 确认场景选择并导出数据
+    exportScenesBtn.addEventListener('click', function() {
+      const selectedScenes = [];
+      document.querySelectorAll('.export-scene-checkbox:checked').forEach(checkbox => {
+        selectedScenes.push(checkbox.value);
+      });
+      
+      if (selectedScenes.length > 0) {
+        // 构建导出URL
+        let url = '/guarantee/export/health_check';
+        selectedScenes.forEach((scene, index) => {
+          url += (index === 0 ? '?' : '&') + 'scenes=' + encodeURIComponent(scene);
+        });
+        // 直接下载Excel文件
+        window.location.href = url;
+      }
+    });
+  });
+</script>
+
+{% endblock %}

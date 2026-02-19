@@ -1,0 +1,1917 @@
+{% extends "base.html" %}
+{% block content %}
+{% set granularity = granularity|default("15m") %}
+
+<!-- 实时状态指示器 -->
+<div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+  <div class="d-flex align-items-center">
+    <div class="spinner-border spinner-border-sm text-primary me-2" role="status" id="statusSpinner">
+      <span class="visually-hidden">加载中...</span>
+    </div>
+    <div>
+      <strong>实时监控状态</strong>
+      <span id="statusText" class="ms-2">数据加载中...</span>
+      <span id="lastUpdated" class="ms-2 text-muted small"></span>
+    </div>
+  </div>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<!-- 4G/5G总流量及话务量 -->
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="card shadow">
+      <div class="card-header bg-white border-bottom">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+          <div class="d-flex align-items-center gap-2">
+            <h5 class="mb-0 fw-bold text-primary">
+              <i class="bi bi-graph-up me-2"></i>4G/5G总流量及话务量
+            </h5>
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#dailyStatsCollapse" aria-expanded="false" aria-controls="dailyStatsCollapse">
+              <i class="bi bi-chevron-down" id="collapseIcon"></i>
+            </button>
+          </div>
+          <form class="d-flex flex-wrap gap-2 align-items-center" method="get">
+            <label class="form-label mb-0">选择日期：</label>
+            <input type="date" class="form-control form-control-sm" name="date" value="{{ selected_date }}" style="width: 150px;">
+            <input type="hidden" name="range" value="{{ range_key }}">
+            <input type="hidden" name="granularity" value="{{ granularity }}">
+            {% for n in networks %}<input type="hidden" name="networks" value="{{ n }}">{% endfor %}
+            {% if auto %}<input type="hidden" name="auto" value="1">{% endif %}
+            {% if auto_interval %}<input type="hidden" name="auto_interval" value="{{ auto_interval }}">{% endif %}
+            <button class="btn btn-sm btn-primary" type="submit">
+              <i class="bi bi-search me-1"></i>查询
+            </button>
+          </form>
+        </div>
+      </div>
+      <div class="collapse" id="dailyStatsCollapse">
+        <!-- 第一行：4G/5G总流量卡片（紧凑并排） -->
+        <div class="row g-3 mb-4">
+          <div class="col-12">
+            {# 统一汇总：把 4G/5G 合并为一个 45G 指标卡片（三行：45G/4G/5G） #}
+            {% set _4g_traffic_gb = (daily_stats['4G'].traffic_tb * 1000) if daily_stats['4G'].traffic_unit == 'TB' else daily_stats['4G'].traffic_gb %}
+            {% set _5g_traffic_gb = (daily_stats['5G'].traffic_tb * 1000) if daily_stats['5G'].traffic_unit == 'TB' else daily_stats['5G'].traffic_gb %}
+            {% set _45g_traffic_gb = (_4g_traffic_gb or 0) + (_5g_traffic_gb or 0) %}
+            {% set _45g_traffic_unit = 'TB' if _45g_traffic_gb >= 1000 else 'GB' %}
+            {% set _45g_traffic_val = (_45g_traffic_gb / 1000) if _45g_traffic_unit == 'TB' else _45g_traffic_gb %}
+
+            {% set _4g_voice_erl_base = (daily_stats['4G'].voice_erl * 10000) if daily_stats['4G'].voice_unit == '万Erl' else daily_stats['4G'].voice_erl %}
+            {% set _5g_voice_erl_base = (daily_stats['5G'].voice_erl * 10000) if daily_stats['5G'].voice_unit == '万Erl' else daily_stats['5G'].voice_erl %}
+            {% set _45g_voice_erl_base = (_4g_voice_erl_base or 0) + (_5g_voice_erl_base or 0) %}
+            {% set _45g_voice_unit = '万Erl' if _45g_voice_erl_base >= 10000 else 'Erl' %}
+            {% set _45g_voice_val = (_45g_voice_erl_base / 10000) if _45g_voice_unit == '万Erl' else _45g_voice_erl_base %}
+
+            <div class="card border-primary card-hover-lift card-pattern">
+              <div class="card-body p-4">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-diagram-3-fill text-primary fs-5"></i>
+                    <h5 class="mb-0 fw-bold text-primary">45G指标汇总</h5>
+                  </div>
+                  <span class="badge bg-primary text-white">
+                    {{ daily_stats.date }}
+                  </span>
+                </div>
+
+                <div class="table-responsive">
+                  <table class="table table-sm table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th style="width: 100px;">制式</th>
+                        <th class="text-center">总流量</th>
+                        <th class="text-center">总话务量</th>
+                        <th class="text-center">上行PRB%</th>
+                        <th class="text-center">下行PRB%</th>
+                        <th class="text-center">无线接通率%</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% set _45g_ul_prb_util = ((daily_stats['4G'].ul_prb_util or 0) + (daily_stats['5G'].ul_prb_util or 0)) / 2 %}
+                      {% set _45g_dl_prb_util = ((daily_stats['4G'].dl_prb_util or 0) + (daily_stats['5G'].dl_prb_util or 0)) / 2 %}
+                      {% set _45g_connect_rate = ((daily_stats['4G'].connect_rate or 0) + (daily_stats['5G'].connect_rate or 0)) / 2 %}
+                      <tr class="table-primary">
+                        <td class="fw-bold text-dark">45G汇总</td>
+                        <td class="text-center">
+                          <span class="fw-bold text-primary">{{ "%.2f"|format(_45g_traffic_val) }} {{ _45g_traffic_unit }}</span>
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold text-success">{{ "%.2f"|format(_45g_voice_val) }} {{ _45g_voice_unit }}</span>
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold text-info">{{ "%.2f"|format(_45g_ul_prb_util) }}%</span>
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold text-info">{{ "%.2f"|format(_45g_dl_prb_util) }}%</span>
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold text-info">{{ "%.2f"|format(_45g_connect_rate) }}%</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="fw-bold text-primary">
+                          <i class="bi bi-4-circle-fill me-1"></i>4G
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold text-primary">
+                            {% if daily_stats['4G'].traffic_unit == "TB" %}
+                              {{ "%.2f"|format(daily_stats['4G'].traffic_tb) }} TB
+                            {% else %}
+                              {{ "%.2f"|format(daily_stats['4G'].traffic_gb) }} GB
+                            {% endif %}
+                          </span>
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold text-success">
+                            {{ "%.2f"|format(daily_stats['4G'].voice_erl) }} {{ daily_stats['4G'].voice_unit }}
+                          </span>
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold text-primary">{{ "%.2f"|format(daily_stats['4G'].ul_prb_util or 0) }}%</span>
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold text-primary">{{ "%.2f"|format(daily_stats['4G'].dl_prb_util or 0) }}%</span>
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold text-primary">{{ "%.2f"|format(daily_stats['4G'].connect_rate or 0) }}%</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="fw-bold text-danger">
+                          <i class="bi bi-5-circle-fill me-1"></i>5G
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold text-danger">
+                            {% if daily_stats['5G'].traffic_unit == "TB" %}
+                              {{ "%.2f"|format(daily_stats['5G'].traffic_tb) }} TB
+                            {% else %}
+                              {{ "%.2f"|format(daily_stats['5G'].traffic_gb) }} GB
+                            {% endif %}
+                          </span>
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold text-success">
+                            {{ "%.2f"|format(daily_stats['5G'].voice_erl) }} {{ daily_stats['5G'].voice_unit }}
+                          </span>
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold text-danger">{{ "%.2f"|format(daily_stats['5G'].ul_prb_util or 0) }}%</span>
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold text-danger">{{ "%.2f"|format(daily_stats['5G'].dl_prb_util or 0) }}%</span>
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold text-danger">{{ "%.2f"|format(daily_stats['5G'].connect_rate or 0) }}%</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 第二行：各区域流量及话务量标题 -->
+        <div class="mb-3">
+          <h6 class="fw-bold text-primary mb-0">
+            <i class="bi bi-geo-alt-fill me-2"></i>各区域流量及话务量统计
+          </h6>
+          <div class="text-muted small">
+            <i class="bi bi-info-circle me-1"></i>数据日期：{{ daily_stats.date }}（与上方日期选择器联动）
+          </div>
+        </div>
+        
+        <!-- 第三行：各区域卡片网格 -->
+        {% set regions = ["江城区", "阳东县", "南区", "阳西县", "阳春市"] %}
+        {% set region_colors = {"江城区": "primary", "阳东县": "success", "南区": "warning", "阳西县": "info", "阳春市": "danger"} %}
+        {% if daily_stats_by_region %}
+          <div class="row g-3 region-5col-grid">
+            {% for region in regions %}
+            {% set color = region_colors[region] %}
+            <div class="col-12 col-sm-6 col-md-4 col-xl">
+              <div class="card border-{{ color }} card-hover-lift h-100">
+                <div class="card-header bg-{{ color }} bg-opacity-10 border-{{ color }} py-3">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0 fw-bold text-white">{{ region }}</h6>
+                    <i class="bi bi-pin-map-fill text-white"></i>
+                  </div>
+                </div>
+                <div class="card-body p-3">
+                  <div class="row">
+                    <div class="col-6">
+                      <h7 class="text-muted small mb-1 d-block">4G指标</h7>
+                      <div class="mb-2">
+                        <div class="small text-muted mb-1">流量</div>
+                        <div class="fw-bold text-primary small">
+                          {% if daily_stats_by_region['4G'][region].traffic_unit == "TB" %}
+                            {{ "%.2f"|format(daily_stats_by_region['4G'][region].traffic_tb) }} TB
+                          {% else %}
+                            {{ "%.2f"|format(daily_stats_by_region['4G'][region].traffic_gb) }} GB
+                          {% endif %}
+                        </div>
+                      </div>
+                      <div class="mb-2">
+                        <div class="small text-muted mb-1">话务</div>
+                        <div class="fw-bold text-success small">
+                          {{ "%.2f"|format(daily_stats_by_region['4G'][region].voice_erl) }} {{ daily_stats_by_region['4G'][region].voice_unit }}
+                        </div>
+                      </div>
+                      <div class="mb-2">
+                        <div class="small text-muted mb-1">PRB%</div>
+                        <div class="fw-bold text-primary small">
+                          {{ "%.2f"|format(daily_stats_by_region['4G'][region].ul_prb_util or 0) }}% / {{ "%.2f"|format(daily_stats_by_region['4G'][region].dl_prb_util or 0) }}%
+                        </div>
+                      </div>
+                      <div>
+                        <div class="small text-muted mb-1">接通率%</div>
+                        <div class="fw-bold text-primary small">{{ "%.2f"|format(daily_stats_by_region['4G'][region].connect_rate or 0) }}%</div>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <h7 class="text-muted small mb-1 d-block">5G指标</h7>
+                      <div class="mb-2">
+                        <div class="small text-muted mb-1">流量</div>
+                        <div class="fw-bold text-danger small">
+                          {% if daily_stats_by_region['5G'][region].traffic_unit == "TB" %}
+                            {{ "%.2f"|format(daily_stats_by_region['5G'][region].traffic_tb) }} TB
+                          {% else %}
+                            {{ "%.2f"|format(daily_stats_by_region['5G'][region].traffic_gb) }} GB
+                          {% endif %}
+                        </div>
+                      </div>
+                      <div class="mb-2">
+                        <div class="small text-muted mb-1">话务</div>
+                        <div class="fw-bold text-success small">
+                          {{ "%.2f"|format(daily_stats_by_region['5G'][region].voice_erl) }} {{ daily_stats_by_region['5G'][region].voice_unit }}
+                        </div>
+                      </div>
+                      <div class="mb-2">
+                        <div class="small text-muted mb-1">PRB%</div>
+                        <div class="fw-bold text-danger small">
+                          {{ "%.2f"|format(daily_stats_by_region['5G'][region].ul_prb_util or 0) }}% / {{ "%.2f"|format(daily_stats_by_region['5G'][region].dl_prb_util or 0) }}%
+                        </div>
+                      </div>
+                      <div>
+                        <div class="small text-muted mb-1">接通率%</div>
+                        <div class="fw-bold text-danger small">{{ "%.2f"|format(daily_stats_by_region['5G'][region].connect_rate or 0) }}%</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            <p>暂无区域统计数据</p>
+          </div>
+        {% endif %}
+
+        <!-- 前一日指标监控通报（文字描述） -->
+        <div class="card shadow-sm mt-4">
+          <div class="card-header bg-white border-bottom">
+            <h6 class="mb-0 fw-bold text-primary">
+              <i class="bi bi-journal-text me-2"></i>前一日指标监控通报（自动概要）
+            </h6>
+          </div>
+          <div class="card-body">
+            {# 业务变化情况：基于当前展示日期的数据做简单文字拼接 #}
+            {% set report_date = daily_stats.date %}
+            {% set _4g_traffic_gb = (daily_stats['4G'].traffic_tb * 1024) if daily_stats['4G'].traffic_unit == 'TB' else daily_stats['4G'].traffic_gb %}
+            {% set _5g_traffic_gb = (daily_stats['5G'].traffic_tb * 1024) if daily_stats['5G'].traffic_unit == 'TB' else daily_stats['5G'].traffic_gb %}
+            {% set _45g_traffic_gb = (_4g_traffic_gb or 0) + (_5g_traffic_gb or 0) %}
+            {% set _45g_traffic_unit = 'TB' if _45g_traffic_gb >= 1024 else 'GB' %}
+            {% set _45g_traffic_val = (_45g_traffic_gb / 1024) if _45g_traffic_unit == 'TB' else _45g_traffic_gb %}
+
+            {% set _4g_voice_erl_base = (daily_stats['4G'].voice_erl * 10000) if daily_stats['4G'].voice_unit == '万Erl' else daily_stats['4G'].voice_erl %}
+            {% set _5g_voice_erl_base = (daily_stats['5G'].voice_erl * 10000) if daily_stats['5G'].voice_unit == '万Erl' else daily_stats['5G'].voice_erl %}
+            {% set _45g_voice_erl_base = (_4g_voice_erl_base or 0) + (_5g_voice_erl_base or 0) %}
+            {% set _45g_voice_unit = '万Erl' if _45g_voice_erl_base >= 10000 else 'Erl' %}
+            {% set _45g_voice_val = (_45g_voice_erl_base / 10000) if _45g_voice_unit == '万Erl' else _45g_voice_erl_base %}
+
+            <p class="mb-2 fw-semibold text-secondary">
+              一、业务变化情况（{{ report_date }} 全天）
+            </p>
+            <p class="mb-2">
+              1、流量：全天流量约
+              <span class="fw-bold text-primary">{{ "%.2f"|format(_45g_traffic_val) }} {{ _45g_traffic_unit }}</span>，
+              其中 5G 流量
+              <span class="fw-bold text-danger">
+                {% if daily_stats['5G'].traffic_unit == "TB" %}
+                  {{ "%.2f"|format(daily_stats['5G'].traffic_tb) }} TB
+                {% else %}
+                  {{ "%.2f"|format(daily_stats['5G'].traffic_gb) }} GB
+                {% endif %}
+              </span>，
+              4G 流量
+              <span class="fw-bold text-primary">
+                {% if daily_stats['4G'].traffic_unit == "TB" %}
+                  {{ "%.2f"|format(daily_stats['4G'].traffic_tb) }} TB
+                {% else %}
+                  {{ "%.2f"|format(daily_stats['4G'].traffic_gb) }} GB
+                {% endif %}
+              </span>。
+            </p>
+
+            <p class="mb-2">
+              2、话务量：全天话务量约
+              <span class="fw-bold text-success">{{ "%.2f"|format(_45g_voice_val) }} {{ _45g_voice_unit }}</span>，
+              其中 5G 话务量
+              <span class="fw-bold text-success">
+                {{ "%.2f"|format(daily_stats['5G'].voice_erl) }} {{ daily_stats['5G'].voice_unit }}
+              </span>，
+              4G 话务量
+              <span class="fw-bold text-success">
+                {{ "%.2f"|format(daily_stats['4G'].voice_erl) }} {{ daily_stats['4G'].voice_unit }}
+              </span>。
+            </p>
+
+            <p class="mb-2">
+              3、无线利用率：45G 上行 PRB 利用率约
+              <span class="fw-bold text-info">{{ "%.2f"|format(_45g_ul_prb_util) }}%</span>，
+              下行 PRB 利用率约
+              <span class="fw-bold text-info">{{ "%.2f"|format(_45g_dl_prb_util) }}%</span>；
+              其中 4G 上行 PRB 利用率
+              <span class="fw-bold text-primary">{{ "%.2f"|format(daily_stats['4G'].ul_prb_util or 0) }}%</span>，
+              下行 PRB 利用率
+              <span class="fw-bold text-primary">{{ "%.2f"|format(daily_stats['4G'].dl_prb_util or 0) }}%</span>；
+              5G 上行 PRB 利用率
+              <span class="fw-bold text-danger">{{ "%.2f"|format(daily_stats['5G'].ul_prb_util or 0) }}%</span>，
+              下行 PRB 利用率
+              <span class="fw-bold text-danger">{{ "%.2f"|format(daily_stats['5G'].dl_prb_util or 0) }}%</span>。
+            </p>
+
+            <p class="mb-2">
+              4、无线接通率：45G 无线接通率约
+              <span class="fw-bold text-info">{{ "%.2f"|format(_45g_connect_rate) }}%</span>，
+              其中 4G 无线接通率
+              <span class="fw-bold text-primary">{{ "%.2f"|format(daily_stats['4G'].connect_rate or 0) }}%</span>，
+              5G 无线接通率
+              <span class="fw-bold text-danger">{{ "%.2f"|format(daily_stats['5G'].connect_rate or 0) }}%</span>。
+            </p>
+
+            {# 各区域业务情况简要枚举，不做前一周对比（后续如需可在后端补基线数据） #}
+            <p class="mb-2">
+              各区域 45G 流量（4G+5G）概况：
+              {% for region in regions %}
+                {% set r4 = daily_stats_by_region['4G'][region] %}
+                {% set r5 = daily_stats_by_region['5G'][region] %}
+                {% set r4_gb = (r4.traffic_tb * 1000) if r4.traffic_unit == 'TB' else r4.traffic_gb %}
+            {% set r5_gb = (r5.traffic_tb * 1000) if r5.traffic_unit == 'TB' else r5.traffic_gb %}
+            {% set r45_gb = (r4_gb or 0) + (r5_gb or 0) %}
+            {% set r45_unit = 'TB' if r45_gb >= 1000 else 'GB' %}
+            {% set r45_val = (r45_gb / 1000) if r45_unit == 'TB' else r45_gb %}
+                {% set r4_val = r4.traffic_tb if r4.traffic_unit == 'TB' else r4.traffic_gb %}
+                {% set r5_val = r5.traffic_tb if r5.traffic_unit == 'TB' else r5.traffic_gb %}
+                <span class="fw-semibold text-dark">{{ region }}</span>
+                <span class="text-primary">
+                  {{ "%.2f"|format(r45_val) }} {{ r45_unit }}
+                  （4G: {{ "%.2f"|format(r4_val) }} {{ r4.traffic_unit }}，5G: {{ "%.2f"|format(r5_val) }} {{ r5.traffic_unit }}）
+                </span>{% if not loop.last %}，{% else %}。{% endif %}
+              {% endfor %}
+            </p>
+
+            <p class="mb-2">
+              各区域 45G 话务量概况：
+              {% for region in regions %}
+                {% set v4 = daily_stats_by_region['4G'][region] %}
+                {% set v5 = daily_stats_by_region['5G'][region] %}
+                {% set v4_erl = (v4.voice_erl * 10000) if v4.voice_unit == '万Erl' else v4.voice_erl %}
+                {% set v5_erl = (v5.voice_erl * 10000) if v5.voice_unit == '万Erl' else v5.voice_erl %}
+                {% set v45_erl = (v4_erl or 0) + (v5_erl or 0) %}
+                {% set v45_unit = '万Erl' if v45_erl >= 10000 else 'Erl' %}
+                {% set v45_val = (v45_erl / 10000) if v45_unit == '万Erl' else v45_erl %}
+                {% set v4_val = v4.voice_erl %}
+                {% set v4_unit = v4.voice_unit %}
+                {% set v5_val = v5.voice_erl %}
+                {% set v5_unit = v5.voice_unit %}
+                <span class="fw-semibold text-dark">{{ region }}</span>
+                <span class="text-success">
+                  {{ "%.2f"|format(v45_val) }} {{ v45_unit }}
+                  （4G: {{ "%.2f"|format(v4_val) }} {{ v4_unit }}，5G: {{ "%.2f"|format(v5_val) }} {{ v5_unit }}）
+                </span>{% if not loop.last %}，{% else %}。{% endif %}
+              {% endfor %}
+            </p>
+
+            <p class="mb-0 text-muted small">
+              注：当前版本仅基于前一日汇总指标自动生成文字概要，前一周对比及热点场景（高铁/高速/商场等）后续可在后端补充计算逻辑。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="card shadow">
+      <div class="card-header bg-white border-bottom">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+          <div class="d-flex flex-column">
+            <h5 class="mb-1 fw-bold text-primary">
+              <i class="bi bi-bar-chart-line me-2"></i>全网流量 / 总用户数（双轴）
+            </h5>
+            <span class="text-muted small">时间范围：{{ end_time.strftime("%Y-%m-%d %H:%M") }} 之前</span>
+          </div>
+          <form class="d-flex flex-wrap gap-2 align-items-center" method="get">
+            <div class="input-group input-group-sm">
+              <label class="input-group-text">时间范围</label>
+              <select class="form-select" name="range" aria-label="range" style="min-width: 140px;">
+                <option value="6h" {% if range_key == "6h" %}selected{% endif %}>最近6小时</option>
+                <option value="12h" {% if range_key == "12h" %}selected{% endif %}>最近12小时</option>
+                <option value="24h" {% if range_key == "24h" %}selected{% endif %}>最近24小时</option>
+              </select>
+            </div>
+            <div class="input-group input-group-sm">
+              <label class="input-group-text">粒度</label>
+              <select class="form-select" name="granularity" aria-label="granularity" style="min-width: 120px;">
+                <option value="15m" {% if granularity == "15m" %}selected{% endif %}>15分钟</option>
+                <option value="1h" {% if granularity == "1h" %}selected{% endif %}>1小时</option>
+              </select>
+            </div>
+            <div class="btn-group" role="group">
+              {% for n in ["4G","5G"] %}
+              <input type="checkbox" class="btn-check" id="net-{{ n }}" name="networks" value="{{ n }}" {% if n in networks %}checked{% endif %}>
+              <label class="btn btn-outline-primary btn-sm" for="net-{{ n }}">{{ n }}</label>
+              {% endfor %}
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="auto" name="auto" value="1" {% if auto %}checked{% endif %}>
+                <label class="form-check-label small" for="auto">自动刷新</label>
+              </div>
+              <!-- 倒计时显示 -->
+              <span id="refreshCountdownWrapper" class="badge bg-secondary" style="min-width: 50px; {% if not auto %}display: none;{% endif %}">
+                <i class="bi bi-clock me-1"></i><span id="refreshCountdown">{{ auto_interval }}</span>s
+              </span>
+              <input type="number" class="form-control form-control-sm" style="width:100px;" name="auto_interval" value="{{ auto_interval }}" min="30" placeholder="秒">
+            </div>
+            <button class="btn btn-sm btn-primary" type="submit">
+              <i class="bi bi-arrow-clockwise me-1"></i> 刷新
+            </button>
+            <a class="btn btn-sm btn-success" href="{{ url_for('export.export_dashboard_data') }}?range={{ range_key }}&granularity={{ granularity }}{% for n in networks %}&networks={{ n }}{% endfor %}">
+              <i class="bi bi-download me-1"></i> 下载数据
+            </a>
+          </form>
+        </div>
+      </div>
+      <div class="card-body p-4">
+        <div class="chart-container" style="position: relative; height: 50vh; min-height: 300px;">
+          <canvas id="trafficChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="card shadow">
+      <div class="card-header bg-white border-bottom">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+          <div class="d-flex flex-column">
+            <h5 class="mb-1 fw-bold text-primary">
+              <i class="bi bi-telephone-forward me-2"></i>45G话务量趋势
+            </h5>
+            <span class="text-muted small">时间范围：{{ end_time.strftime("%Y-%m-%d %H:%M") }} 之前</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-body p-4">
+        <div class="chart-container" style="position: relative; height: 40vh; min-height: 300px;">
+          <canvas id="voiceChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 区域流量趋势图 -->
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="card shadow">
+      <div class="card-header bg-white border-bottom">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+          <div class="d-flex flex-column">
+            <h5 class="mb-1 fw-bold text-primary">
+              <i class="bi bi-geo-alt me-2"></i>区域流量趋势
+            </h5>
+            <span class="text-muted small">时间范围：{{ end_time.strftime("%Y-%m-%d %H:%M") }} 之前</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-body p-4">
+        <div class="chart-container" style="position: relative; height: 40vh; min-height: 300px;">
+          <canvas id="regionTrafficChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card shadow h-100">
+      <div class="card-header bg-white border-bottom">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 fw-bold text-primary">
+            <i class="bi bi-activity me-2"></i>无线接通率趋势
+          </h6>
+          <div class="d-flex flex-column align-items-end">
+            <div class="small text-muted">4G: {{ latest_ts.get('4g') or '无' }}</div>
+            <div class="small text-muted">5G: {{ latest_ts.get('5g') or '无' }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body p-4">
+        <div class="chart-container" style="position: relative; height: 35vh; min-height: 250px;">
+          <canvas id="connectChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4G/5G利用率Top清单 -->
+<div class="row g-4 mt-4">
+  <div class="col-12">
+    <div class="card shadow h-100">
+      <div class="card-header bg-white border-bottom">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 fw-bold text-primary">
+            <i class="bi bi-trophy-fill me-2"></i>4G 利用率Top清单（前20）
+          </h6>
+          <div class="d-flex align-items-center gap-2">
+            <a class="btn btn-sm btn-outline-success" href="{{ url_for('export.export_top_utilization') }}?network=4G&granularity={{ granularity }}">
+              <i class="bi bi-download me-1"></i> 导出Top清单
+            </a>
+            {% if top4.pages > 1 %}
+          <div class="btn-group btn-group-sm">
+            {% for p in range(1, top4.pages + 1) %}
+            <a class="btn {% if p == top4.page %}btn-primary{% else %}btn-outline-primary{% endif %}"
+               href="{{ url_for('main.dashboard', range=range_key, networks=networks, page4=p, page5=page5, auto=1 if auto else 0, auto_interval=auto_interval, granularity=granularity) }}">
+              {{ p }}
+            </a>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-container">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>排名</th>
+                <th>小区名</th>
+                <th>CGI</th>
+                <th>干扰</th>
+                <th>上行PRB%</th>
+                <th>下行PRB%</th>
+                <th>最大PRB%</th>
+                <th>无线接通率%</th>
+                <th>用户数</th>
+                <th>流量</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if top4.data %}
+                {% for cell in top4.data %}
+                {% set rank = (top4.page - 1) * 20 + loop.index %}
+                {% set traffic_gb = cell.total_traffic|float %}
+                {% set use_tb = traffic_gb >= 1024 %}
+                {% set traffic_value = (traffic_gb / 1024) if use_tb else traffic_gb %}
+                {% set traffic_unit = 'TB' if use_tb else 'GB' %}
+                <tr>
+                  <td><span class="badge {% if rank <= 3 %}bg-danger{% elif rank <= 10 %}bg-warning{% else %}bg-secondary{% endif %}">{{ rank }}</span></td>
+                  <td>{{ cell.cellname or '-' }}</td>
+                  <td>{{ cell.cgi or '-' }}</td>
+                  <td>{{ "%.2f"|format(cell.interference or 0) }}</td>
+                  <td>{{ "%.2f"|format(cell.ul_prb_util or 0) }}</td>
+                  <td>{{ "%.2f"|format(cell.dl_prb_util or 0) }}</td>
+                  <td><strong>{{ "%.2f"|format(cell.max_prb_util or 0) }}</strong></td>
+                  <td>{{ "%.2f"|format(cell.connect_rate or 0) }}</td>
+                  <td>{{ cell.max_rrc_users or 0 }}</td>
+                  <td>{{ "%.2f"|format(traffic_value) }} {{ traffic_unit }}</td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr><td colspan="10" class="text-center text-muted py-3">暂无数据</td></tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card shadow h-100 mt-3">
+      <div class="card-header bg-white border-bottom">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 fw-bold text-primary">
+            <i class="bi bi-trophy-fill me-2"></i>5G 利用率Top清单（前20）
+          </h6>
+          <div class="d-flex align-items-center gap-2">
+            <a class="btn btn-sm btn-outline-success" href="{{ url_for('export.export_top_utilization') }}?network=5G&granularity={{ granularity }}">
+              <i class="bi bi-download me-1"></i> 导出Top清单
+            </a>
+            {% if top5.pages > 1 %}
+          <div class="btn-group btn-group-sm">
+            {% for p in range(1, top5.pages + 1) %}
+            <a class="btn {% if p == top5.page %}btn-primary{% else %}btn-outline-primary{% endif %}"
+               href="{{ url_for('main.dashboard', range=range_key, networks=networks, page4=page4, page5=p, auto=1 if auto else 0, auto_interval=auto_interval, granularity=granularity) }}">
+              {{ p }}
+            </a>
+            {% endfor %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-container">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>排名</th>
+                <th>小区名</th>
+                <th>CGI</th>
+                <th>干扰</th>
+                <th>上行PRB%</th>
+                <th>下行PRB%</th>
+                <th>最大PRB%</th>
+                <th>无线接通率%</th>
+                <th>用户数</th>
+                <th>流量</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if top5.data %}
+                {% for cell in top5.data %}
+                {% set rank = (top5.page - 1) * 20 + loop.index %}
+                {% set traffic_gb = cell.total_traffic|float %}
+                {% set use_tb = traffic_gb >= 1024 %}
+                {% set traffic_value = (traffic_gb / 1024) if use_tb else traffic_gb %}
+                {% set traffic_unit = 'TB' if use_tb else 'GB' %}
+                <tr>
+                  <td><span class="badge {% if rank <= 3 %}bg-danger{% elif rank <= 10 %}bg-warning{% else %}bg-secondary{% endif %}">{{ rank }}</span></td>
+                  <td>{{ cell.cellname or '-' }}</td>
+                  <td>{{ cell.cgi or '-' }}</td>
+                  <td>{{ "%.2f"|format(cell.interference or 0) }}</td>
+                  <td>{{ "%.2f"|format(cell.ul_prb_util or 0) }}</td>
+                  <td>{{ "%.2f"|format(cell.dl_prb_util or 0) }}</td>
+                  <td><strong>{{ "%.2f"|format(cell.max_prb_util or 0) }}</strong></td>
+                  <td>{{ "%.2f"|format(cell.connect_rate or 0) }}</td>
+                  <td>{{ cell.max_rrc_users or 0 }}</td>
+                  <td>{{ "%.2f"|format(traffic_value) }} {{ traffic_unit }}</td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr><td colspan="10" class="text-center text-muted py-3">暂无数据</td></tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow mt-4">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h6 class="mb-0 fw-bold text-primary">
+          <i class="bi bi-database-gear me-2"></i>指标查询
+        </h6>
+        <span class="text-muted small">跳转到独立页面进行多时段分析</span>
+      </div>
+      <div class="btn-group" role="group">
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('main.cell') }}">
+          <i class="bi bi-search me-1"></i>进入指标查询
+        </a>
+        <a class="btn btn-sm btn-outline-success" href="{{ url_for('export.export_latest_metrics') }}">
+          <i class="bi bi-download me-1"></i>下载最新全量小区指标
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 确保DOM加载完成后再执行
+(function() {
+  'use strict';
+  
+  // 实时状态指示器逻辑
+  function updateStatus() {
+    const statusText = document.getElementById('statusText');
+    const lastUpdated = document.getElementById('lastUpdated');
+    const statusSpinner = document.getElementById('statusSpinner');
+    
+    if (statusText && lastUpdated && statusSpinner) {
+      // 隐藏加载动画
+      statusSpinner.classList.remove('spinner-border');
+      statusSpinner.classList.add('bi');
+      statusSpinner.classList.add('bi-check-circle-fill');
+      statusSpinner.classList.add('text-success');
+      statusSpinner.innerHTML = '';
+      
+      // 更新状态文本
+      statusText.textContent = '数据加载完成';
+      
+      // 更新最后更新时间
+      const now = new Date();
+      const formattedTime = now.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      lastUpdated.textContent = `最后更新: ${formattedTime}`;
+      
+      // 3秒后将状态指示器样式改为成功
+      setTimeout(() => {
+        const statusAlert = statusText.closest('.alert');
+        if (statusAlert) {
+          statusAlert.classList.remove('alert-info');
+          statusAlert.classList.add('alert-success');
+        }
+      }, 3000);
+    }
+  }
+  
+  // 页面加载完成后更新状态
+  window.addEventListener('load', function() {
+    setTimeout(updateStatus, 1000);
+  });
+  
+  // 每30秒自动更新状态
+  setInterval(updateStatus, 30000);
+  
+const trafficData = {{ traffic|default([])|tojson }};
+const cellData = {{ cell_data|default([])|tojson }};
+const connectData = {{ connect_series|default([])|tojson }};
+const rrcData = {{ rrc_series|default([])|tojson }};
+const voiceData = {{ voice_series|default([])|tojson }};
+const top4 = {{ top4|default({})|tojson }};
+const top5 = {{ top5|default({})|tojson }};
+
+function groupTraffic(data) {
+  const byNet = {};
+  data.forEach((row) => {
+    const key = row.network_type;
+    if (!byNet[key]) {
+      byNet[key] = {
+        labels: [],
+        traffic: [],
+        uplink: [],
+        downlink: [],
+        byTime: {},
+      };
+    }
+    const ts = row.start_time;
+    const total = Number(row.total_traffic || 0);
+    const up = Number(row.uplink_traffic || 0);
+    const down = Number(row.downlink_traffic || 0);
+    byNet[key].labels.push(ts);
+    byNet[key].traffic.push(total);
+    byNet[key].uplink.push(up);
+    byNet[key].downlink.push(down);
+    byNet[key].byTime[ts] = { total, up, down };
+  });
+  return byNet;
+}
+
+const palette = {
+  "4G": "#3b82f6", // 蓝色
+  "5G": "#ef4444", // 红色
+  "江城区": "#3b82f6",
+  "阳东县": "#10b981",
+  "南区": "#f59e0b",
+  "阳西县": "#8b5cf6",
+  "阳春市": "#ec4899"
+};
+
+const trafficCtx = document.getElementById("trafficChart");
+if (trafficCtx && trafficData && trafficData.length > 0) {
+  const grouped = groupTraffic(trafficData);
+  // 使用全网（4G+5G）联合的时间轴，避免某一制式缺最后一个点时被截断
+  const labelSet = new Set();
+  Object.values(grouped).forEach((net) => {
+    net.labels.forEach((ts) => labelSet.add(ts));
+  });
+  const labels = Array.from(labelSet).sort();
+  const maxTraffic = Math.max(...trafficData.map(r => Number(r.total_traffic || 0)), 0);
+  const useTB = maxTraffic >= 1024;
+  const unitLabel = useTB ? "TB" : "GB";
+  const trafficFactor = useTB ? 1/1024 : 1;
+
+  const trafficDatasets = Object.entries(grouped).map(([net, val]) => {
+    const series = labels.map((ts) => {
+      const rec = val.byTime[ts];
+      return rec ? Number(rec.total || 0) * trafficFactor : 0;
+    });
+    return {
+      type: "bar",
+      label: `${net} 流量(${unitLabel})`,
+      data: series,
+      backgroundColor: (palette[net] || "#4facfe") + "66",
+      borderColor: palette[net] || "#4facfe",
+      borderWidth: 2,
+      borderRadius: 6,
+      yAxisID: "y",
+    };
+  });
+
+  const rrcGrouped = {};
+  rrcData.forEach(row => {
+    const net = row.network_type;
+    if (!rrcGrouped[net]) rrcGrouped[net] = {};
+    rrcGrouped[net][row.start_time] = Number(row.rrc_connmax || 0);
+  });
+  const rrcDatasets = Object.keys(rrcGrouped).map((net, idx) => ({
+    type: "line",
+    label: `${net} 总用户数`,
+    data: labels.map(ts => rrcGrouped[net][ts] || 0),
+    borderColor: palette[net] || "#6c757d",
+    backgroundColor: (palette[net] || "#6c757d") + "33",
+    borderWidth: 3,
+    pointRadius: 4,
+    pointHoverRadius: 6,
+    tension: 0.3,
+    yAxisID: "y1",
+  }));
+
+  if (typeof Chart === 'undefined') {
+    console.error('Chart.js 未加载，无法创建图表');
+    const cardBody = trafficCtx.closest('.card-body');
+    if (cardBody) {
+      cardBody.innerHTML = '<p class="text-center text-danger py-3">图表库未加载，请检查网络连接或运行下载脚本</p>';
+    }
+    return;
+  }
+  try {
+    new Chart(trafficCtx, {
+      data: {
+        labels,
+        datasets: [...trafficDatasets, ...rrcDatasets],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: "index",
+          intersect: false,
+        },
+        animation: {
+          duration: 1000,
+          easing: 'easeInOutQuart'
+        },
+        scales: {
+          y: {
+            title: {
+              display: true,
+              text: `流量(${unitLabel})`,
+              font: { size: 13, weight: 'bold', color: '#495057' }
+            },
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.08)',
+              drawBorder: false
+            },
+            ticks: {
+              font: { size: 12, color: '#6c757d' }
+            }
+          },
+          y1: {
+            position: "right",
+            title: {
+              display: true,
+              text: "总用户数",
+              font: { size: 13, weight: 'bold', color: '#495057' }
+            },
+            beginAtZero: true,
+            grid: {
+              drawOnChartArea: false,
+              color: 'rgba(0, 0, 0, 0.05)'
+            },
+            ticks: {
+              font: { size: 12, color: '#6c757d' }
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: "时间",
+              font: { size: 13, weight: 'bold', color: '#495057' }
+            },
+            grid: {
+              display: false
+            },
+            ticks: {
+              font: { size: 12, color: '#6c757d' },
+              maxRotation: 45,
+              minRotation: 0,
+              callback: function(value, index, ticks) {
+                const label = this.getLabelForValue(value);
+                // 确保时间格式为 YYYY-MM-DD HH:mm:ss
+                if (label) {
+                  // 检查是否已经是完整的时间格式
+                  if (label.length === 19) {
+                    return label;
+                  }
+                  // 如果是 "YYYY-MM-DD HH:mm" 格式，添加 ':00'
+                  else if (label.length === 16) {
+                    return label + ':00';
+                  }
+                  // 其他情况，尝试转换为标准格式
+                  try {
+                    const date = new Date(label);
+                    if (!isNaN(date.getTime())) {
+                      return date.toISOString().slice(0, 19).replace('T', ' ');
+                    }
+                  } catch (e) {
+                    // 转换失败，返回原始标签
+                  }
+                }
+                return label;
+              }
+            }
+          },
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: {
+              usePointStyle: true,
+              padding: 20,
+              font: { size: 13, weight: '500', color: '#495057' },
+              boxWidth: 6,
+              boxHeight: 6,
+              pointStyle: 'circle',
+              filter: function(item) {
+                // 只显示前5个图例，避免图例过多
+                return item.text.indexOf('4G') > -1 || item.text.indexOf('5G') > -1;
+              }
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            padding: 15,
+            titleFont: { size: 14, weight: 'bold', color: 'white' },
+            bodyFont: { size: 13, color: 'white' },
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            borderWidth: 1,
+            cornerRadius: 8,
+            displayColors: true,
+            usePointStyle: true,
+            callbacks: {
+              label: (ctx) => {
+                let label = ctx.dataset.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                // 格式化数值，保留两位小数
+                let value = ctx.raw;
+                if (typeof value === 'number') {
+                  label += value.toFixed(2);
+                } else {
+                  label += value;
+                }
+                return label;
+              },
+              title: (items) => {
+                // 格式化标题，显示更友好的时间格式
+                if (items.length > 0) {
+                  const label = items[0].label;
+                  if (label) {
+                    try {
+                      const date = new Date(label);
+                      if (!isNaN(date.getTime())) {
+                        return date.toLocaleString('zh-CN', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        });
+                      }
+                    } catch (e) {
+                      // 转换失败，返回原始标签
+                    }
+                    return label;
+                  }
+                }
+                return '';
+              }
+            }
+          },
+          title: {
+            display: false
+          },
+          // 添加图表注解插件
+          annotation: {
+            annotations: {
+              // 可以在这里添加水平参考线等
+            }
+          }
+        }
+      },
+    });
+  } catch (error) {
+    console.error('Error creating traffic chart:', error);
+    const cardBody = trafficCtx.closest('.card-body');
+    if (cardBody) {
+      cardBody.innerHTML = '<p class="text-center text-danger py-3">图表渲染失败</p>';
+    }
+  }
+} else if (trafficCtx && (!trafficData || trafficData.length === 0)) {
+  const cardBody = trafficCtx.closest('.card-body');
+  if (cardBody) {
+    cardBody.innerHTML = '<p class="text-center text-muted py-3">暂无流量数据</p>';
+  }
+}
+
+function drawBasicLine(canvasId, data, valueKey, labelText, yLabel) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) {
+    console.warn('Canvas element not found:', canvasId);
+    return;
+  }
+  if (typeof Chart === 'undefined') {
+    console.error('Chart.js 未加载，无法创建图表');
+    const cardBody = ctx.closest('.card-body');
+    if (cardBody) {
+      cardBody.innerHTML = '<p class="text-center text-danger py-3">图表库未加载，请检查网络连接或运行下载脚本</p>';
+    }
+    return;
+  }
+  if (!data || data.length === 0) {
+    console.warn('No data available for chart:', canvasId);
+    const cardBody = ctx.closest('.card-body');
+    if (cardBody) {
+      cardBody.innerHTML = '<p class="text-center text-muted py-3">暂无数据</p>';
+    }
+    return;
+  }
+  const labels = [...new Set(data.map(r => r.start_time))];
+  const nets = [...new Set(data.map(r => r.network_type))];
+  const datasets = nets.map(n => ({
+    label: `${n} ${labelText}`,
+    data: labels.map(ts => {
+      const row = data.find(r => r.network_type === n && r.start_time === ts);
+      return row ? Number(row[valueKey] || 0) : 0;
+    }),
+    borderColor: palette[n] || "#4facfe",
+    backgroundColor: (palette[n] || "#4facfe") + "33",
+    borderWidth: 3,
+    pointRadius: 4,
+    pointHoverRadius: 6,
+    tension: 0.3,
+  }));
+  
+  // 计算数据范围以自适应Y轴
+  const allValues = datasets.flatMap(ds => ds.data);
+  const minValue = Math.min(...allValues);
+  const maxValue = Math.max(...allValues);
+  
+  // 为接通率和利用率设置合理的Y轴范围
+  let yMin, yMax;
+  if (valueKey === 'connect_rate' || yLabel.includes('接通率') || yLabel.includes('利用率')) {
+    // 接通率和利用率：根据实际数据动态调整Y轴范围
+    // Y轴最大值 = 数据最大值 + 5%（但不超过100%）
+    yMax = Math.min(100, Math.ceil(maxValue * 1.05));
+    
+    // 智能调整Y轴最小值，根据数据范围使用不同的调整单位
+    if (maxValue > 95) {
+      // 数据>95%时：以2%为单位调整
+      yMin = Math.max(0, Math.floor(minValue / 2) * 2 - 2);
+    } else if (maxValue > 80) {
+      // 数据>80%时：以5%为单位调整
+      yMin = Math.max(0, Math.floor(minValue / 5) * 5 - 5);
+    } else {
+      // 其他情况：以10%为单位调整
+      yMin = Math.max(0, Math.floor(minValue / 10) * 10 - 10);
+    }
+  } else {
+    // 其他指标从0开始
+    yMin = 0;
+    yMax = undefined;
+  }
+  
+  try {
+    new Chart(ctx, {
+      type: "line",
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: "index",
+          intersect: false,
+        },
+        animation: {
+          duration: 1000,
+          easing: 'easeInOutQuart'
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: "时间",
+              font: { size: 13, weight: 'bold', color: '#495057' }
+            },
+            grid: {
+              display: false
+            },
+            ticks: {
+              font: { size: 12, color: '#6c757d' },
+              maxRotation: 45,
+              minRotation: 0,
+              callback: function(value, index, ticks) {
+                const label = this.getLabelForValue(value);
+                // 确保时间格式为 YYYY-MM-DD HH:mm:ss
+                if (label) {
+                  // 检查是否已经是完整的时间格式
+                  if (label.length === 19) {
+                    return label;
+                  }
+                  // 如果是 "YYYY-MM-DD HH:mm" 格式，添加 ':00'
+                  else if (label.length === 16) {
+                    return label + ':00';
+                  }
+                  // 其他情况，尝试转换为标准格式
+                  try {
+                    const date = new Date(label);
+                    if (!isNaN(date.getTime())) {
+                      return date.toISOString().slice(0, 19).replace('T', ' ');
+                    }
+                  } catch (e) {
+                    // 转换失败，返回原始标签
+                  }
+                }
+                return label;
+              }
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: yLabel,
+              font: { size: 13, weight: 'bold', color: '#495057' }
+            },
+            min: yMin,
+            max: yMax,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.08)',
+              drawBorder: false
+            },
+            ticks: {
+              font: { size: 12, color: '#6c757d' }
+            }
+          },
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 15,
+              font: { size: 12, weight: '500', color: '#495057' },
+              boxWidth: 6
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            padding: 12,
+            titleFont: { size: 13, weight: 'bold', color: 'white' },
+            bodyFont: { size: 12, color: 'white' },
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            borderWidth: 1,
+            cornerRadius: 8,
+            displayColors: true
+          }
+        }
+      },
+    });
+  } catch (error) {
+    console.error('Error creating chart:', canvasId, error);
+    const cardBody = ctx.closest('.card-body');
+    if (cardBody) {
+      cardBody.innerHTML = '<p class="text-center text-danger py-3">图表渲染失败</p>';
+    }
+  }
+}
+
+drawBasicLine("connectChart", connectData, "connect_rate", "接通率", "接通率(%)");
+drawBasicLine("rrcChart", rrcData, "rrc_connmax", "RRC总用户数", "RRC总用户数");
+
+drawVoiceChart();
+
+function drawVoiceChart() {
+  const ctx = document.getElementById("voiceChart");
+  if (!ctx) {
+    console.warn('Canvas element not found: voiceChart');
+    return;
+  }
+  
+  if (typeof Chart === 'undefined') {
+    console.error('Chart.js 未加载，无法创建图表');
+    const cardBody = ctx.closest('.card-body');
+    if (cardBody) {
+      cardBody.innerHTML = '<p class="text-center text-danger py-3">图表库未加载，请检查网络连接或运行下载脚本</p>';
+    }
+    return;
+  }
+  
+  if (!voiceData || voiceData.length === 0) {
+    console.warn('No voice data available');
+    const cardBody = ctx.closest('.card-body');
+    if (cardBody) {
+      cardBody.innerHTML = '<p class="text-center text-muted py-3">暂无话务量数据</p>';
+    }
+    return;
+  }
+  
+  // 处理话务量数据
+  const byNet = {};
+  voiceData.forEach((row) => {
+    const net = row.network_type;
+    if (!byNet[net]) {
+      byNet[net] = {
+        labels: [],
+        voice: [],
+        byTime: {},
+      };
+    }
+    const ts = row.start_time;
+    const voice = Number(row.voice_erl || 0);
+    byNet[net].labels.push(ts);
+    byNet[net].voice.push(voice);
+    byNet[net].byTime[ts] = voice;
+  });
+  
+  // 使用联合的时间轴
+  const labelSet = new Set();
+  Object.values(byNet).forEach((net) => {
+    net.labels.forEach((ts) => labelSet.add(ts));
+  });
+  const labels = Array.from(labelSet).sort();
+  
+  const datasets = Object.entries(byNet).map(([net, val]) => {
+    const series = labels.map((ts) => {
+      return val.byTime[ts] || 0;
+    });
+    return {
+      type: "line",
+      label: `${net} 话务量(Erl)`,
+      data: series,
+      backgroundColor: (palette[net] || "#4facfe") + "33",
+      borderColor: palette[net] || "#4facfe",
+      borderWidth: 3,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      tension: 0.3,
+    };
+  });
+  
+  // 计算数据范围
+  const allValues = datasets.flatMap(ds => ds.data);
+  const maxValue = Math.max(...allValues, 0);
+  const yMax = maxValue > 0 ? Math.ceil(maxValue * 1.1) : 10;
+  
+  try {
+    new Chart(ctx, {
+      type: "line",
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: "index",
+          intersect: false,
+        },
+        animation: {
+          duration: 1000,
+          easing: 'easeInOutQuart'
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: "时间",
+              font: { size: 13, weight: 'bold', color: '#495057' }
+            },
+            grid: {
+              display: false
+            },
+            ticks: {
+              font: { size: 12, color: '#6c757d' },
+              maxRotation: 45,
+              minRotation: 0,
+              callback: function(value, index, ticks) {
+                const label = this.getLabelForValue(value);
+                if (label) {
+                  if (label.length === 19) {
+                    return label;
+                  }
+                  else if (label.length === 16) {
+                    return label + ':00';
+                  }
+                  try {
+                    const date = new Date(label);
+                    if (!isNaN(date.getTime())) {
+                      return date.toISOString().slice(0, 19).replace('T', ' ');
+                    }
+                  } catch (e) {
+                  }
+                }
+                return label;
+              }
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: "话务量(Erl)",
+              font: { size: 13, weight: 'bold', color: '#495057' }
+            },
+            min: 0,
+            max: yMax,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.08)',
+              drawBorder: false
+            },
+            ticks: {
+              font: { size: 12, color: '#6c757d' }
+            }
+          },
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 15,
+              font: { size: 12, weight: '500', color: '#495057' },
+              boxWidth: 6
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            padding: 12,
+            titleFont: { size: 13, weight: 'bold', color: 'white' },
+            bodyFont: { size: 12, color: 'white' },
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            borderWidth: 1,
+            cornerRadius: 8,
+            displayColors: true
+          }
+        }
+      },
+    });
+  } catch (error) {
+    console.error('Error creating voice chart:', error);
+    const cardBody = ctx.closest('.card-body');
+    if (cardBody) {
+      cardBody.innerHTML = '<p class="text-center text-danger py-3">图表渲染失败</p>';
+    }
+  }
+}
+
+// 绘制区域流量趋势图（改为区域 45G 流量堆叠柱状图）
+function drawRegionTrafficChart() {
+  const ctx = document.getElementById("regionTrafficChart");
+  if (!ctx) return;
+  
+  if (typeof Chart === 'undefined') {
+    console.error('Chart.js 未加载，无法创建图表');
+    const cardBody = ctx.closest('.card-body');
+    if (cardBody) {
+      cardBody.innerHTML = '<p class="text-center text-danger py-3">图表库未加载，请检查网络连接或运行下载脚本</p>';
+    }
+    return;
+  }
+  
+  // 使用与"各区域流量及话务量统计"相同的区域划分
+  const regions = ["江城区", "阳东县", "南区", "阳西县", "阳春市"];
+  const networkColors = {
+    "4G": "#4c6fff",
+    "5G": "#ff7a90"
+  };
+  
+  // 获取URL参数
+  const urlParams = new URLSearchParams(window.location.search);
+  const rangeKey = urlParams.get('range') || '6h';
+  const granularity = urlParams.get('granularity') || '15m';
+  
+  // 构建API URL，确保同时请求4G和5G数据
+  const apiUrl = `/api/traffic/region?range=${rangeKey}&granularity=${granularity}&networks=4G&networks=5G`;
+  
+  // 显示加载状态
+  const cardBody = ctx.closest('.card-body');
+  if (cardBody) {
+    cardBody.innerHTML = '<div class="d-flex justify-content-center align-items-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+  }
+  
+  // 从API获取数据
+  fetch(apiUrl)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success || !data.data || data.data.length === 0) {
+        throw new Error('No data available');
+      }
+      
+      // 处理数据：按区域汇总 4G+5G（45G）流量
+      const regionData = data.data || [];
+      
+      // 获取所有唯一的时间标签
+      const timeLabels = [...new Set(regionData.map(item => item.start_time))].sort();
+      
+      // 预聚合每个时间点、每个区域、每个制式的流量
+      const trafficByTimeRegionNet = {};
+      timeLabels.forEach(ts => {
+        trafficByTimeRegionNet[ts] = {};
+        regions.forEach(r => {
+          trafficByTimeRegionNet[ts][r] = {"4G": 0, "5G": 0};
+        });
+      });
+      
+      regionData.forEach(item => {
+        const ts = item.start_time;
+        const region = item.region;
+        const net = item.network_type;
+        if (!trafficByTimeRegionNet[ts]) {
+          trafficByTimeRegionNet[ts] = {};
+          regions.forEach(r => {
+            trafficByTimeRegionNet[ts][r] = {"4G": 0, "5G": 0};
+          });
+        }
+        if (regions.includes(region) && (net === "4G" || net === "5G")) {
+          trafficByTimeRegionNet[ts][region][net] += Number(item.total_traffic || 0);
+        }
+      });
+      
+      // 计算最大值以确定单位（GB/TB）
+      let maxTraffic = 0;
+      timeLabels.forEach(ts => {
+        regions.forEach(r => {
+          const v4 = trafficByTimeRegionNet[ts][r]["4G"] || 0;
+          const v5 = trafficByTimeRegionNet[ts][r]["5G"] || 0;
+          maxTraffic = Math.max(maxTraffic, v4 + v5);
+        });
+      });
+      const useTB = maxTraffic >= 1000;
+      const unitLabel = useTB ? "TB" : "GB";
+      const factor = useTB ? 1 / 1000 : 1;
+      
+      // 为每个区域创建 4G/5G 两段堆叠柱（同一时间点：按区域分组，每根柱子内是 4G+5G 堆叠）
+      const datasets = [];
+      
+      // 先创建4G数据集
+      regions.forEach(r => {
+        datasets.push({
+          type: "bar",
+          label: `${r} 4G`,
+          data: timeLabels.map(ts => (trafficByTimeRegionNet[ts][r]["4G"] || 0) * factor),
+          backgroundColor: networkColors["4G"] + "99",
+          borderColor: networkColors["4G"],
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.8,
+          categoryPercentage: 0.8,
+          stack: r // 每个区域一个stack，实现同区域内4G和5G堆叠
+        });
+      });
+      
+      // 再创建5G数据集
+      regions.forEach(r => {
+        datasets.push({
+          type: "bar",
+          label: `${r} 5G`,
+          data: timeLabels.map(ts => (trafficByTimeRegionNet[ts][r]["5G"] || 0) * factor),
+          backgroundColor: networkColors["5G"] + "99",
+          borderColor: networkColors["5G"],
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.8,
+          categoryPercentage: 0.8,
+          stack: r // 每个区域一个stack，实现同区域内4G和5G堆叠
+        });
+      });
+      
+      // 重新添加canvas元素
+      if (cardBody) {
+        cardBody.innerHTML = '<canvas id="regionTrafficChart" style="height: 400px;"></canvas>';
+      }
+      
+      // 获取新的canvas元素
+      const newCtx = document.getElementById("regionTrafficChart");
+      if (!newCtx) return;
+      
+      try {
+        new Chart(newCtx, {
+          type: "bar",
+          data: { labels: timeLabels, datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              mode: "nearest",
+              intersect: true,
+            },
+            animation: {
+              duration: 1000,
+              easing: 'easeInOutQuart'
+            },
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: "时间",
+                  font: { size: 13, weight: 'bold', color: '#495057' }
+                },
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  font: { size: 12, color: '#6c757d' },
+                  maxRotation: 45,
+                  minRotation: 0,
+                  callback: function(value, index, ticks) {
+                    const label = this.getLabelForValue(value);
+                    // 确保时间格式为 YYYY-MM-DD HH:mm:ss
+                    if (label) {
+                      // 检查是否已经是完整的时间格式
+                      if (label.length === 19) {
+                        return label;
+                      }
+                      // 如果是 "YYYY-MM-DD HH:mm" 格式，添加 ':00'
+                      else if (label.length === 16) {
+                        return label + ':00';
+                      }
+                      // 其他情况，尝试转换为标准格式
+                      try {
+                        const date = new Date(label);
+                        if (!isNaN(date.getTime())) {
+                          return date.toISOString().slice(0, 19).replace('T', ' ');
+                        }
+                      } catch (e) {
+                        // 转换失败，返回原始标签
+                      }
+                    }
+                    return label;
+                  }
+                }
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: `区域45G流量(${unitLabel})`,
+                  font: { size: 13, weight: 'bold', color: '#495057' }
+                },
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.08)',
+                  drawBorder: false
+                },
+                ticks: {
+                  font: { size: 12, color: '#6c757d' }
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                  usePointStyle: true,
+                  padding: 15,
+                  font: { size: 12, weight: '500', color: '#495057' },
+                  boxWidth: 6
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                padding: 15,
+                titleFont: { size: 14, weight: 'bold', color: 'white' },
+                bodyFont: { size: 13, color: 'white' },
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderWidth: 1,
+                cornerRadius: 8,
+                displayColors: true,
+                callbacks: {
+                  label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) {
+                      label += ': ';
+                    }
+                    if (context.parsed.y !== null) {
+                      label += context.parsed.y.toFixed(2) + ' ' + unitLabel;
+                    }
+                    return label;
+                  }
+                }
+              }
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Error creating region traffic chart:', error);
+        if (cardBody) {
+          cardBody.innerHTML = '<p class="text-center text-danger py-3">图表渲染失败</p>';
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching region traffic data:', error);
+      if (cardBody) {
+        cardBody.innerHTML = '<p class="text-center text-danger py-3">数据加载失败，请刷新页面重试</p>';
+      }
+    });
+}
+
+drawRegionTrafficChart();
+
+// 小区指标图表仅在cell.html页面中使用，dashboard页面不需要
+// 如果cellData存在且页面中有对应的canvas元素，才绘制图表
+if (cellData && cellData.length > 0) {
+  const trafficCtx2 = document.getElementById("cellTrafficChart");
+  const qualityCtx = document.getElementById("cellQualityChart");
+  
+  if (trafficCtx2) {
+    if (typeof Chart === 'undefined') {
+      console.error('Chart.js 未加载，无法创建图表');
+      const cardBody = trafficCtx2.closest('.card-body');
+      if (cardBody) {
+        cardBody.innerHTML = '<p class="text-center text-danger py-3">图表库未加载，请检查网络连接或运行下载脚本</p>';
+      }
+      return;
+    }
+    const labels = cellData.map((row) => row.start_time);
+    const flowRaw = cellData.map((row) => Number(row.total_traffic || 0));
+    const maxFlow = Math.max(...flowRaw, 0);
+    const useTB = maxFlow >= 1024;
+    const unitLabel = useTB ? "TB" : "GB";
+    const flowFactor = useTB ? 1/1024 : 1;
+    const flow = flowRaw.map(v => v * flowFactor);
+
+    new Chart(trafficCtx2, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: `总流量 (${unitLabel})`,
+            data: flow,
+            borderColor: "#0d6efd",
+            backgroundColor: "#0d6efd33",
+            tension: 0.2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: "index",
+          intersect: false,
+        },
+        animation: {
+          duration: 750,
+          easing: 'easeInOutQuart'
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: "时间",
+              font: { size: 12, weight: 'bold' }
+            },
+            grid: {
+              display: false
+            },
+            ticks: {
+              font: { size: 11 },
+              maxRotation: 45,
+              minRotation: 0,
+              callback: function(value, index, ticks) {
+                const label = this.getLabelForValue(value);
+                // 确保时间格式为 YYYY-MM-DD HH:mm:ss
+                if (label && label.length === 16) {
+                  return label + ':00';
+                }
+                return label;
+              }
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: `流量(${unitLabel})`,
+              font: { size: 12, weight: 'bold' }
+            },
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)',
+              drawBorder: false
+            },
+            ticks: {
+              font: { size: 11 }
+            }
+          },
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 12,
+              font: { size: 12 }
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            padding: 12,
+            titleFont: { size: 13, weight: 'bold' },
+            bodyFont: { size: 12 },
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            borderWidth: 1,
+            cornerRadius: 6,
+            displayColors: true
+          }
+        }
+      },
+    });
+  }
+
+  if (qualityCtx) {
+    const labels = cellData.map((row) => row.start_time);
+    const dlPrb = cellData.map((row) => Number(row.dl_prb_utilization || 0));
+    const ulPrb = cellData.map((row) => Number(row.ul_prb_utilization || 0));
+    const connect = cellData.map((row) => Number(row.wireless_connect_rate || 0));
+
+    new Chart(qualityCtx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {label: "下行PRB利用率(%)", data: dlPrb, borderColor: "#dc3545", backgroundColor: "#dc354533", tension: 0.2, fill: true},
+          {label: "上行PRB利用率(%)", data: ulPrb, borderColor: "#0d6efd", backgroundColor: "#0d6efd33", tension: 0.2, fill: true},
+          {label: "无线接通率(%)", data: connect, borderColor: "#198754", backgroundColor: "#19875433", tension: 0.2, yAxisID: "y1", fill: true},
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: "index",
+          intersect: false,
+        },
+        animation: {
+          duration: 750,
+          easing: 'easeInOutQuart'
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: "时间",
+              font: { size: 12, weight: 'bold' }
+            },
+            grid: {
+              display: false
+            },
+            ticks: {
+              font: { size: 11 },
+              maxRotation: 45,
+              minRotation: 0,
+              callback: function(value, index, ticks) {
+                const label = this.getLabelForValue(value);
+                // 确保时间格式为 YYYY-MM-DD HH:mm:ss
+                if (label && label.length === 16) {
+                  return label + ':00';
+                }
+                return label;
+              }
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: "PRB利用率(%)",
+              font: { size: 12, weight: 'bold' }
+            },
+            beginAtZero: true,
+            max: 100,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)',
+              drawBorder: false
+            },
+            ticks: {
+              font: { size: 11 }
+            }
+          },
+          y1: {
+            title: {
+              display: true,
+              text: "接通率(%)",
+              font: { size: 12, weight: 'bold' }
+            },
+            position: "right",
+            beginAtZero: true,
+            max: 100,
+            grid: {
+              drawOnChartArea: false,
+              color: 'rgba(0, 0, 0, 0.05)'
+            },
+            ticks: {
+              font: { size: 11 }
+            }
+          },
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 12,
+              font: { size: 11 }
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            padding: 10,
+            titleFont: { size: 12, weight: 'bold' },
+            bodyFont: { size: 11 },
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            borderWidth: 1,
+            cornerRadius: 6,
+            displayColors: true
+          }
+        }
+      },
+    });
+  }
+}
+
+{% if auto %}
+// 自动刷新倒计时
+(function() {
+  let countdown = {{ auto_interval }};
+  const countdownEl = document.getElementById('refreshCountdown');
+  const wrapperEl = document.getElementById('refreshCountdownWrapper');
+  
+  if (wrapperEl) wrapperEl.style.display = '';
+  
+  const timer = setInterval(() => {
+    countdown--;
+    if (countdownEl) countdownEl.textContent = countdown;
+    console.log(`⏱️ 全网监控自动刷新倒计时: ${countdown}s`);
+    
+    if (countdown <= 0) {
+      clearInterval(timer);
+      console.log('🔄 执行页面刷新...');
+      location.reload();
+    }
+  }, 1000);
+})();
+{% endif %}
+
+})(); // 立即执行函数结束
+
+// 折叠按钮图标切换
+document.addEventListener('DOMContentLoaded', function() {
+  const collapseElement = document.getElementById('dailyStatsCollapse');
+  const collapseIcon = document.getElementById('collapseIcon');
+  
+  if (collapseElement && collapseIcon) {
+    collapseElement.addEventListener('show.bs.collapse', function () {
+      collapseIcon.classList.remove('bi-chevron-down');
+      collapseIcon.classList.add('bi-chevron-up');
+    });
+    
+    collapseElement.addEventListener('hide.bs.collapse', function () {
+      collapseIcon.classList.remove('bi-chevron-up');
+      collapseIcon.classList.add('bi-chevron-down');
+    });
+  }
+});
+</script>
+{% endblock %}
+

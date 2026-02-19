@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .screen-info {
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 12px;
+    z-index: 1000;
+  }
+</style>
+
+<!-- 屏幕信息显示 -->
+<div class="screen-info" id="screenInfo">
+  <div>屏幕宽度: <span id="screenWidth"></span>px</div>
+  <div>容器宽度: <span id="containerWidth"></span>px</div>
+  <div>设备类型: <span id="deviceType"></span></div>
+</div>
+
+<!-- 页面标题 -->
+<div class="card shadow mb-4">
+  <div class="card-header bg-white" style="border-left: 4px solid var(--primary-color);">
+    <h5 class="mb-0 fw-bold">
+      <i class="bi bi-display me-2 text-primary"></i>宽屏优化测试页面
+    </h5>
+  </div>
+  <div class="card-body">
+    <p class="mb-0">此页面用于测试宽屏优化效果。请在不同尺寸的屏幕上查看布局变化。</p>
+  </div>
+</div>
+
+<!-- 统计卡片测试 -->
+<div class="row g-4 mb-4">
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-1">指标1</h6>
+            <h3 class="mb-0 fw-bold text-primary">1,234</h3>
+          </div>
+          <div class="bg-primary bg-opacity-10 p-3 rounded">
+            <i class="bi bi-graph-up fs-2 text-primary"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-1">指标2</h6>
+            <h3 class="mb-0 fw-bold text-success">5,678</h3>
+          </div>
+          <div class="bg-success bg-opacity-10 p-3 rounded">
+            <i class="bi bi-check-circle fs-2 text-success"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-1">指标3</h6>
+            <h3 class="mb-0 fw-bold text-warning">9,012</h3>
+          </div>
+          <div class="bg-warning bg-opacity-10 p-3 rounded">
+            <i class="bi bi-exclamation-triangle fs-2 text-warning"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-1">指标4</h6>
+            <h3 class="mb-0 fw-bold text-danger">3,456</h3>
+          </div>
+          <div class="bg-danger bg-opacity-10 p-3 rounded">
+            <i class="bi bi-x-circle fs-2 text-danger"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 图表测试 -->
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="card shadow">
+      <div class="card-header bg-white">
+        <h6 class="mb-0 fw-bold text-primary">
+          <i class="bi bi-bar-chart me-2"></i>图表容器测试
+        </h6>
+      </div>
+      <div class="card-body p-4">
+        <div class="chart-container" style="position: relative; min-height: 300px; background: #f8f9fa; border: 2px dashed #dee2e6; display: flex; align-items: center; justify-content: center;">
+          <div class="text-center text-muted">
+            <i class="bi bi-graph-up" style="font-size: 4rem;"></i>
+            <p class="mt-3">图表容器区域<br>在宽屏上会自动增加高度</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 表格测试 -->
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="card shadow">
+      <div class="card-header bg-white">
+        <h6 class="mb-0 fw-bold text-primary">
+          <i class="bi bi-table me-2"></i>表格测试
+        </h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>序号</th>
+                <th>名称</th>
+                <th>短文本</th>
+                <th>中等长度文本</th>
+                <th>长文本（会被截断）</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for i in range(1, 11) %}
+              <tr>
+                <td>{{ i }}</td>
+                <td>项目{{ i }}</td>
+                <td>简短</td>
+                <td class="text-truncate" style="max-width: 150px;" title="这是一段中等长度的文本内容，用于测试截断效果">
+                  这是一段中等长度的文本内容，用于测试截断效果
+                </td>
+                <td class="text-truncate" style="max-width: 200px;" title="这是一段很长很长很长很长很长很长很长很长很长很长的文本内容，用于测试在宽屏上的显示效果">
+                  这是一段很长很长很长很长很长很长很长很长很长很长的文本内容，用于测试在宽屏上的显示效果
+                </td>
+                <td>
+                  {% if i % 3 == 0 %}
+                  <span class="badge bg-success">正常</span>
+                  {% elif i % 3 == 1 %}
+                  <span class="badge bg-warning">警告</span>
+                  {% else %}
+                  <span class="badge bg-danger">异常</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-primary">查看</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 响应式断点说明 -->
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="card shadow">
+      <div class="card-header bg-white">
+        <h6 class="mb-0 fw-bold text-primary">
+          <i class="bi bi-info-circle me-2"></i>响应式断点说明
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>断点</th>
+                <th>屏幕宽度</th>
+                <th>优化内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>小屏</strong></td>
+                <td>&lt; 768px</td>
+                <td>移动端优化，单列布局</td>
+              </tr>
+              <tr>
+                <td><strong>中屏</strong></td>
+                <td>768px - 1199px</td>
+                <td>平板优化，2-3列布局</td>
+              </tr>
+              <tr class="table-info">
+                <td><strong>大屏</strong></td>
+                <td>1200px - 1399px</td>
+                <td>标准桌面，减少padding</td>
+              </tr>
+              <tr class="table-success">
+                <td><strong>超大屏</strong></td>
+                <td>1400px - 1919px</td>
+                <td>宽屏优化，4-6列布局，增加图表高度</td>
+              </tr>
+              <tr class="table-warning">
+                <td><strong>超宽屏</strong></td>
+                <td>≥ 1920px</td>
+                <td>全面优化，5-8列布局，增大字体和间距</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function updateScreenInfo() {
+    const width = window.innerWidth;
+    const containerWidth = document.querySelector('main').offsetWidth;
+    
+    let deviceType = '';
+    if (width < 768) {
+      deviceType = '小屏（移动端）';
+    } else if (width < 1200) {
+      deviceType = '中屏（平板）';
+    } else if (width < 1400) {
+      deviceType = '大屏（标准桌面）';
+    } else if (width < 1920) {
+      deviceType = '超大屏（宽屏）';
+    } else {
+      deviceType = '超宽屏（4K/超宽）';
+    }
+    
+    document.getElementById('screenWidth').textContent = width;
+    document.getElementById('containerWidth').textContent = containerWidth;
+    document.getElementById('deviceType').textContent = deviceType;
+  }
+  
+  // 初始化
+  updateScreenInfo();
+  
+  // 监听窗口大小变化
+  window.addEventListener('resize', updateScreenInfo);
+</script>
+
+{% endblock %}

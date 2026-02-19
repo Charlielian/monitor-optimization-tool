@@ -1,0 +1,27 @@
+{
+    "pgsql_config": {
+        "host": "192.168.31.51",
+        "port": 5432,
+        "database": "postgres",
+        "user": "postgres",
+        "password": "103001"
+    },
+    "mysql_config": {
+        "host": "192.168.31.175",
+        "port": 3306,
+        "database": "optimization_toolbox",
+        "user": "root",
+        "password": "103001"
+    },
+    "streamlit_config": {
+        "port": 8808,
+        "server_address": "0.0.0.0"
+    },
+    "transfer_config": {
+        "enable_raw_to_metrics": true,
+        "skip_if_pg_has_data": true,
+        "check_data_hours": 1
+    },
+    "log_level": "INFO",
+    "secret_key": "your-secret-key-here"
+}

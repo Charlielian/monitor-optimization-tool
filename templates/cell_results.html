@@ -1,0 +1,385 @@
+{% if cell_cgi and cell_data %}
+<hr class="my-4">
+
+<!-- 混查模式提示 -->
+{% if cell_network == "混查" and auto_detected_network %}
+<div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+  <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+  <div>
+    <h6 class="alert-heading mb-1">自动识别结果</h6>
+    <p class="mb-0">
+      {% if auto_detected_network['4G']|length > 0 %}
+      <span class="badge bg-success me-2">4G小区: {{ auto_detected_network['4G']|length }}个</span>
+      {% endif %}
+      {% if auto_detected_network['5G']|length > 0 %}
+      <span class="badge bg-primary me-2">5G小区: {{ auto_detected_network['5G']|length }}个</span>
+      {% endif %}
+      {% if auto_detected_network['unknown']|length > 0 %}
+      <span class="badge bg-warning text-dark">无法识别: {{ auto_detected_network['unknown']|length }}个</span>
+      {% endif %}
+    </p>
+  </div>
+</div>
+{% endif %}
+
+<!-- 分离4G和5G数据 -->
+{% set data_4g = [] %}
+{% set data_5g = [] %}
+{% for row in cell_data %}
+  {% if row.network_type == '4G' %}
+    {% set _ = data_4g.append(row) %}
+  {% elif row.network_type == '5G' %}
+    {% set _ = data_5g.append(row) %}
+  {% endif %}
+{% endfor %}
+
+<!-- 4G查询结果表 -->
+{% if data_4g|length > 0 %}
+<div class="card border-success mb-4">
+  <div class="card-header bg-success bg-opacity-10 border-success d-flex justify-content-between align-items-center">
+    <h6 class="mb-0 fw-bold text-success">
+      <i class="bi bi-4-circle-fill me-2"></i>4G小区查询结果
+      <span class="badge bg-success ms-2">{{ data_4g|length }} 条记录</span>
+    </h6>
+    <div class="d-flex align-items-center gap-2">
+      <a class="btn btn-sm btn-success" href="{{ url_for('export.export_cell_data') }}?cell_cgi={{ cell_cgi }}&cell_network=4G&start_time={{ start_time }}&end_time={{ end_time }}&granularity={{ granularity }}&include_metrics=0">
+        <i class="bi bi-download me-1"></i> 导出数据
+      </a>
+      <label class="form-check-label d-flex align-items-center gap-1">
+        <input class="form-check-input" type="checkbox" id="include_metrics_4g">
+        导出分子分母
+      </label>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+      <table class="table table-hover table-striped mb-0">
+        <thead class="table-success sticky-top">
+          <tr>
+            <th class="text-center" style="min-width: 150px;"><i class="bi bi-clock me-1"></i>时间</th>
+            <th class="text-center" style="min-width: 180px;"><i class="bi bi-pin-map me-1"></i>小区CGI</th>
+            <th class="text-center" style="min-width: 200px;"><i class="bi bi-building me-1"></i>小区名</th>
+            <th class="text-center" style="min-width: 100px;"><i class="bi bi-reception-4 me-1"></i>干扰</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-arrow-up-circle me-1"></i>上行PRB%</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-arrow-down-circle me-1"></i>下行PRB%</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-speedometer2 me-1"></i>最大PRB%</th>
+            <th class="text-center" style="min-width: 140px;"><i class="bi bi-check-circle me-1"></i>无线接通率%</th>
+            <th class="text-center" style="min-width: 140px;"><i class="bi bi-radio me-1"></i>RRC接通率%</th>
+            <th class="text-center" style="min-width: 140px;"><i class="bi bi-network me-1"></i>ERAB接通率%</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-hdd-network me-1"></i>流量</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-people me-1"></i>RRC用户数</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-telephone me-1"></i>话务量</th>
+            <th class="text-center" style="min-width: 140px;"><i class="bi bi-arrow-right-circle me-1"></i>切换成功率%</th>
+            <th class="text-center" style="min-width: 140px;"><i class="bi bi-arrow-down-circle me-1"></i>掉线率%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in data_4g %}
+          {% set traffic_gb = row.total_traffic|float %}
+          {% set use_tb = traffic_gb >= 1024 %}
+          {% set traffic_value = (traffic_gb / 1024) if use_tb else traffic_gb %}
+          {% set traffic_unit = 'TB' if use_tb else 'GB' %}
+          {% set ul_prb = row.ul_prb_utilization|float if row.ul_prb_utilization else 0 %}
+          {% set dl_prb = row.dl_prb_utilization|float if row.dl_prb_utilization else 0 %}
+          {% set max_prb = ul_prb if ul_prb > dl_prb else dl_prb %}
+          {% set voice_erl = row.voice_erl|float if row.voice_erl else 0 %}
+          {% set use_wan_erl = voice_erl >= 10000 %}
+          {% set voice_value = (voice_erl / 10000) if use_wan_erl else voice_erl %}
+          {% set voice_unit = '万Erl' if use_wan_erl else 'Erl' %}
+          <tr>
+            <td class="text-center">{{ row.start_time }}</td>
+            <td class="text-center"><code class="text-success">{{ row.cgi or row.cell_id or '-' }}</code></td>
+            <td class="text-center">{% if row.scenario %}{{ row.scenario }}{% else %}{{ row.cellname or '-' }}{% endif %}</td>
+            <td class="text-center">{{ "%.2f"|format(row.interference or 0) }}</td>
+            <td class="text-center">
+              <span class="badge {% if ul_prb >= 80 %}bg-danger{% elif ul_prb >= 60 %}bg-warning{% else %}bg-success{% endif %}">
+                {{ "%.2f"|format(ul_prb) }}%
+              </span>
+            </td>
+            <td class="text-center">
+              <span class="badge {% if dl_prb >= 80 %}bg-danger{% elif dl_prb >= 60 %}bg-warning{% else %}bg-success{% endif %}">
+                {{ "%.2f"|format(dl_prb) }}%
+              </span>
+            </td>
+            <td class="text-center">
+              <strong class="{% if max_prb >= 80 %}text-danger{% elif max_prb >= 60 %}text-warning{% else %}text-success{% endif %}">
+                {{ "%.2f"|format(max_prb) }}%
+              </strong>
+            </td>
+            <td class="text-center">{{ "%.2f"|format(row.wireless_connect_rate or 0) }}%</td>
+            <td class="text-center">{{ "%.2f"|format(row.rrc_success_rate or 0) }}%</td>
+            <td class="text-center">{{ "%.2f"|format(row.erab_success_rate or 0) }}%</td>
+            <td class="text-center">
+              <span class="badge bg-info">{{ "%.2f"|format(traffic_value) }} {{ traffic_unit }}</span>
+            </td>
+            <td class="text-center">{{ row.rrc_users or 0 }}</td>
+            <td class="text-center">
+              <span class="badge bg-secondary">{{ "%.2f"|format(voice_value) }} {{ voice_unit }}</span>
+            </td>
+            <td class="text-center">{{ "%.2f"|format(row.ho_success_rate or 0) }}%</td>
+            <td class="text-center">{{ "%.2f"|format(row.erab_drop_rate or 0) }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer bg-light text-muted small">
+    <i class="bi bi-info-circle me-1"></i>
+    提示：PRB利用率 <span class="badge bg-success">绿色</span> &lt;60%，
+    <span class="badge bg-warning">黄色</span> 60-80%，
+    <span class="badge bg-danger">红色</span> ≥80%
+  </div>
+</div>
+{% endif %}
+
+<!-- 5G查询结果表 -->
+{% if data_5g|length > 0 %}
+<div class="card border-primary mb-4">
+  <div class="card-header bg-primary bg-opacity-10 border-primary d-flex justify-content-between align-items-center">
+    <h6 class="mb-0 fw-bold text-primary">
+      <i class="bi bi-5-circle-fill me-2"></i>5G小区查询结果
+      <span class="badge bg-primary ms-2">{{ data_5g|length }} 条记录</span>
+    </h6>
+    <div class="d-flex align-items-center gap-2">
+      <a class="btn btn-sm btn-success" href="{{ url_for('export.export_cell_data') }}?cell_cgi={{ cell_cgi }}&cell_network=5G&start_time={{ start_time }}&end_time={{ end_time }}&granularity={{ granularity }}&include_metrics=0">
+        <i class="bi bi-download me-1"></i> 导出数据
+      </a>
+      <label class="form-check-label d-flex align-items-center gap-1">
+        <input class="form-check-input" type="checkbox" id="include_metrics_5g">
+        导出分子分母
+      </label>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+      <table class="table table-hover table-striped mb-0">
+        <thead class="table-primary sticky-top">
+          <tr>
+            <th class="text-center" style="min-width: 150px;"><i class="bi bi-clock me-1"></i>时间</th>
+            <th class="text-center" style="min-width: 180px;"><i class="bi bi-pin-map me-1"></i>小区CGI</th>
+            <th class="text-center" style="min-width: 200px;"><i class="bi bi-building me-1"></i>小区名</th>
+            <th class="text-center" style="min-width: 100px;"><i class="bi bi-reception-4 me-1"></i>干扰</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-arrow-up-circle me-1"></i>上行PRB%</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-arrow-down-circle me-1"></i>下行PRB%</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-speedometer2 me-1"></i>最大PRB%</th>
+            <th class="text-center" style="min-width: 140px;"><i class="bi bi-check-circle me-1"></i>无线接通率%</th>
+            <th class="text-center" style="min-width: 140px;"><i class="bi bi-radio me-1"></i>RRC接通率%</th>
+            <th class="text-center" style="min-width: 140px;"><i class="bi bi-network me-1"></i>NG接通率%</th>
+            <th class="text-center" style="min-width: 140px;"><i class="bi bi-diagram-3 me-1"></i>Flow接通率%</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-hdd-network me-1"></i>流量</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-people me-1"></i>RRC用户数</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-telephone me-1"></i>话务量</th>
+            <th class="text-center" style="min-width: 140px;"><i class="bi bi-arrow-right-circle me-1"></i>切换成功率%</th>
+            <th class="text-center" style="min-width: 140px;"><i class="bi bi-arrow-down-circle me-1"></i>无线掉线率%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in data_5g %}
+          {% set traffic_gb = row.total_traffic|float %}
+          {% set use_tb = traffic_gb >= 1024 %}
+          {% set traffic_value = (traffic_gb / 1024) if use_tb else traffic_gb %}
+          {% set traffic_unit = 'TB' if use_tb else 'GB' %}
+          {% set ul_prb = row.ul_prb_utilization|float if row.ul_prb_utilization else 0 %}
+          {% set dl_prb = row.dl_prb_utilization|float if row.dl_prb_utilization else 0 %}
+          {% set max_prb = ul_prb if ul_prb > dl_prb else dl_prb %}
+          {% set voice_erl = row.voice_erl|float if row.voice_erl else 0 %}
+          {% set use_wan_erl = voice_erl >= 10000 %}
+          {% set voice_value = (voice_erl / 10000) if use_wan_erl else voice_erl %}
+          {% set voice_unit = '万Erl' if use_wan_erl else 'Erl' %}
+          <tr>
+            <td class="text-center">{{ row.start_time }}</td>
+            <td class="text-center"><code class="text-primary">{{ row.cgi or row.cell_id or '-' }}</code></td>
+            <td class="text-center">{% if row.scenario %}{{ row.scenario }}{% else %}{{ row.cellname or '-' }}{% endif %}</td>
+            <td class="text-center">{{ "%.2f"|format(row.interference or 0) }}</td>
+            <td class="text-center">
+              <span class="badge {% if ul_prb >= 80 %}bg-danger{% elif ul_prb >= 60 %}bg-warning{% else %}bg-success{% endif %}">
+                {{ "%.2f"|format(ul_prb) }}%
+              </span>
+            </td>
+            <td class="text-center">
+              <span class="badge {% if dl_prb >= 80 %}bg-danger{% elif dl_prb >= 60 %}bg-warning{% else %}bg-success{% endif %}">
+                {{ "%.2f"|format(dl_prb) }}%
+              </span>
+            </td>
+            <td class="text-center">
+              <strong class="{% if max_prb >= 80 %}text-danger{% elif max_prb >= 60 %}text-warning{% else %}text-success{% endif %}">
+                {{ "%.2f"|format(max_prb) }}%
+              </strong>
+            </td>
+            <td class="text-center">{{ "%.2f"|format(row.wireless_connect_rate or 0) }}%</td>
+            <td class="text-center">{{ "%.2f"|format(row.rrc_success_rate or 0) }}%</td>
+            <td class="text-center">{{ "%.2f"|format(row.erab_success_rate or 0) }}%</td>
+            <td class="text-center">{{ "%.2f"|format(row.flow_success_rate or 0) }}%</td>
+            <td class="text-center">
+              <span class="badge bg-info">{{ "%.2f"|format(traffic_value) }} {{ traffic_unit }}</span>
+            </td>
+            <td class="text-center">{{ row.rrc_users or 0 }}</td>
+            <td class="text-center">
+              <span class="badge bg-secondary">{{ "%.2f"|format(voice_value) }} {{ voice_unit }}</span>
+            </td>
+            <td class="text-center">{{ "%.2f"|format(row.ho_success_rate or 0) }}%</td>
+            <td class="text-center">{{ "%.2f"|format(row.wireless_drop_rate_5g or 0) }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer bg-light text-muted small">
+    <i class="bi bi-info-circle me-1"></i>
+    提示：PRB利用率 <span class="badge bg-success">绿色</span> &lt;60%，
+    <span class="badge bg-warning">黄色</span> 60-80%，
+    <span class="badge bg-danger">红色</span> ≥80%
+  </div>
+</div>
+{% endif %}
+
+<!-- 如果只有一种制式，显示原来的单一表格 -->
+{% if data_4g|length == 0 and data_5g|length == 0 and cell_data|length > 0 %}
+<div class="card border-primary">
+  <div class="card-header bg-primary bg-opacity-10 border-primary d-flex justify-content-between align-items-center">
+    <h6 class="mb-0 fw-bold text-primary">
+      <i class="bi bi-table me-2"></i>查询结果
+      <span class="badge bg-primary ms-2">{{ cell_data|length }} 条记录</span>
+    </h6>
+    <a class="btn btn-sm btn-success" href="{{ url_for('export.export_cell_data') }}?cell_cgi={{ cell_cgi }}&cell_network={{ cell_network }}&start_time={{ start_time }}&end_time={{ end_time }}&granularity={{ granularity }}">
+      <i class="bi bi-download me-1"></i> 导出数据
+    </a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+      <table class="table table-hover table-striped mb-0">
+        <thead class="table-primary sticky-top">
+          <tr>
+            <th class="text-center" style="min-width: 150px;"><i class="bi bi-clock me-1"></i>时间</th>
+            <th class="text-center" style="min-width: 180px;"><i class="bi bi-pin-map me-1"></i>小区CGI</th>
+            <th class="text-center" style="min-width: 200px;"><i class="bi bi-building me-1"></i>小区名</th>
+            <th class="text-center" style="min-width: 100px;"><i class="bi bi-reception-4 me-1"></i>干扰</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-arrow-up-circle me-1"></i>上行PRB%</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-arrow-down-circle me-1"></i>下行PRB%</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-speedometer2 me-1"></i>最大PRB%</th>
+            <th class="text-center" style="min-width: 140px;"><i class="bi bi-check-circle me-1"></i>无线接通率%</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-hdd-network me-1"></i>流量</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-people me-1"></i>RRC用户数</th>
+            <th class="text-center" style="min-width: 120px;"><i class="bi bi-telephone me-1"></i>话务量</th>
+            <th class="text-center" style="min-width: 140px;"><i class="bi bi-arrow-right-circle me-1"></i>切换成功率%</th>
+            <th class="text-center" style="min-width: 140px;"><i class="bi bi-arrow-down-circle me-1"></i>掉线率%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in cell_data %}
+          {% set traffic_gb = row.total_traffic|float %}
+          {% set use_tb = traffic_gb >= 1024 %}
+          {% set traffic_value = (traffic_gb / 1024) if use_tb else traffic_gb %}
+          {% set traffic_unit = 'TB' if use_tb else 'GB' %}
+          {% set ul_prb = row.ul_prb_utilization|float if row.ul_prb_utilization else 0 %}
+          {% set dl_prb = row.dl_prb_utilization|float if row.dl_prb_utilization else 0 %}
+          {% set max_prb = ul_prb if ul_prb > dl_prb else dl_prb %}
+          {% set voice_erl = row.voice_erl|float if row.voice_erl else 0 %}
+          {% set use_wan_erl = voice_erl >= 10000 %}
+          {% set voice_value = (voice_erl / 10000) if use_wan_erl else voice_erl %}
+          {% set voice_unit = '万Erl' if use_wan_erl else 'Erl' %}
+          <tr>
+            <td class="text-center">{{ row.start_time }}</td>
+            <td class="text-center"><code class="text-primary">{{ row.cgi or row.cell_id or '-' }}</code></td>
+            <td class="text-center">{% if row.scenario %}{{ row.scenario }}{% else %}{{ row.cellname or '-' }}{% endif %}</td>
+            <td class="text-center">{{ "%.2f"|format(row.interference or 0) }}</td>
+            <td class="text-center">
+              <span class="badge {% if ul_prb >= 80 %}bg-danger{% elif ul_prb >= 60 %}bg-warning{% else %}bg-success{% endif %}">
+                {{ "%.2f"|format(ul_prb) }}%
+              </span>
+            </td>
+            <td class="text-center">
+              <span class="badge {% if dl_prb >= 80 %}bg-danger{% elif dl_prb >= 60 %}bg-warning{% else %}bg-success{% endif %}">
+                {{ "%.2f"|format(dl_prb) }}%
+              </span>
+            </td>
+            <td class="text-center">
+              <strong class="{% if max_prb >= 80 %}text-danger{% elif max_prb >= 60 %}text-warning{% else %}text-success{% endif %}">
+                {{ "%.2f"|format(max_prb) }}%
+              </strong>
+            </td>
+            <td class="text-center">{{ "%.2f"|format(row.wireless_connect_rate or 0) }}%</td>
+            <td class="text-center">
+              <span class="badge bg-info">{{ "%.2f"|format(traffic_value) }} {{ traffic_unit }}</span>
+            </td>
+            <td class="text-center">{{ row.rrc_users or 0 }}</td>
+            <td class="text-center">
+              <span class="badge bg-secondary">{{ "%.2f"|format(voice_value) }} {{ voice_unit }}</span>
+            </td>
+            <td class="text-center">{{ "%.2f"|format(row.ho_success_rate or 0) }}%</td>
+            <td class="text-center">{% if row.erab_drop_rate %}{{ "%.2f"|format(row.erab_drop_rate or 0) }}%{% elif row.wireless_drop_rate_5g %}{{ "%.2f"|format(row.wireless_drop_rate_5g or 0) }}%{% else %}0.00%{% endif %}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="11" class="text-center text-muted py-4">暂无数据</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer bg-light text-muted small">
+    <i class="bi bi-info-circle me-1"></i>
+    提示：PRB利用率 <span class="badge bg-success">绿色</span> &lt;60%，
+    <span class="badge bg-warning">黄色</span> 60-80%，
+    <span class="badge bg-danger">红色</span> ≥80%
+  </div>
+</div>
+{% elif cell_cgi %}
+<hr class="my-4">
+<div class="alert alert-warning d-flex align-items-center" role="alert">
+  <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+  <div>
+    <h6 class="alert-heading mb-1">未查询到数据</h6>
+    <p class="mb-0">请确认以下信息是否正确：</p>
+    <ul class="mb-0 mt-2">
+      <li>小区CGI格式是否正确</li>
+      <li>制式（4G/5G）选择是否正确</li>
+      <li>时间范围内是否有数据</li>
+    </ul>
+  </div>
+</div>
+{% endif %}
+{% elif cell_cgi %}
+<hr class="my-4">
+<div class="alert alert-warning d-flex align-items-center" role="alert">
+  <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+  <div>
+    <h6 class="alert-heading mb-1">未查询到数据</h6>
+    <p class="mb-0">请确认以下信息是否正确：</p>
+    <ul class="mb-0 mt-2">
+      <li>小区CGI格式是否正确</li>
+      <li>制式（4G/5G）选择是否正确</li>
+      <li>时间范围内是否有数据</li>
+    </ul>
+  </div>
+</div>
+{% endif %}
+
+<script>
+  // 4G导出分子分母选项
+  const includeMetrics4G = document.getElementById('include_metrics_4g');
+  if (includeMetrics4G) {
+    includeMetrics4G.addEventListener('change', function() {
+      const exportBtn = this.closest('.d-flex').querySelector('a.btn-success');
+      if (this.checked) {
+        exportBtn.href = exportBtn.href.replace('include_metrics=0', 'include_metrics=1');
+      } else {
+        exportBtn.href = exportBtn.href.replace('include_metrics=1', 'include_metrics=0');
+      }
+    });
+  }
+
+  // 5G导出分子分母选项
+  const includeMetrics5G = document.getElementById('include_metrics_5g');
+  if (includeMetrics5G) {
+    includeMetrics5G.addEventListener('change', function() {
+      const exportBtn = this.closest('.d-flex').querySelector('a.btn-success');
+      if (this.checked) {
+        exportBtn.href = exportBtn.href.replace('include_metrics=0', 'include_metrics=1');
+      } else {
+        exportBtn.href = exportBtn.href.replace('include_metrics=1', 'include_metrics=0');
+      }
+    });
+  }
+</script>

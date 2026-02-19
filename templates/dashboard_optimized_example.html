@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- 原有内容 -->
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 等待依赖加载
+function waitForDependencies(callback) {
+  if (typeof Chart !== 'undefined' && typeof ChartOptimizer !== 'undefined') {
+    callback();
+  } else {
+    setTimeout(() => waitForDependencies(callback), 100);
+  }
+}
+
+// 页面加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+  waitForDependencies(function() {
+    console.log('✓ 依赖加载完成，开始渲染图表');
+    
+    // 示例：渲染流量图表
+    renderTrafficChart();
+    
+    // 示例：渲染接通率图表（延迟渲染）
+    setTimeout(() => renderConnectChart(), 200);
+    
+    // 示例：渲染RRC图表（延迟渲染）
+    setTimeout(() => renderRRCChart(), 400);
+  });
+});
+
+function renderTrafficChart() {
+  const ctx = document.getElementById('trafficChart');
+  if (!ctx) return;
+  
+  // 获取原始数据
+  const rawData = {{ traffic | tojson }};
+  
+  // 降采样（如果数据量大）
+  const optimizedData = ChartOptimizer.downsampleTimeSeries(rawData, 100);
+  
+  // 优化配置
+  const config = ChartOptimizer.optimizeChartConfig({
+    type: 'line',
+    data: {
+      labels: optimizedData.map(d => d.time),
+      datasets: [{
+        label: '流量',
+        data: optimizedData.map(d => d.value),
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1
+      }]
+    },
+    options: {
+      animation: false,  // 禁用动画
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+  
+  // 创建图表
+  new Chart(ctx.getContext('2d'), config);
+  console.log('✓ 流量图表渲染完成');
+}
+
+function renderConnectChart() {
+  // 类似的优化逻辑
+  console.log('✓ 接通率图表渲染完成');
+}
+
+function renderRRCChart() {
+  // 类似的优化逻辑
+  console.log('✓ RRC图表渲染完成');
+}
+</script>
+{% endblock %}

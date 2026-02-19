@@ -1,0 +1,472 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- 面包屑导航 -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('grid.grid') }}">网格监控</a></li>
+      <li class="breadcrumb-item active">{{ grid_id }}</li>
+    </ol>
+  </nav>
+
+  <!-- 网格信息 -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h3 class="mb-3">
+            <i class="bi bi-grid-3x3-gap-fill me-2"></i>
+            {{ grid_name or grid_id }}
+            <small class="text-muted">（{{ grid_id }}）</small>
+            <a href="{{ url_for('grid.grid_health_check', grid_id=grid_id) }}" 
+               class="btn btn-primary btn-sm float-end">
+              <i class="bi bi-heart-pulse"></i> 小区体检
+            </a>
+          </h3>
+          
+          <!-- 问题标签 -->
+          {% if grid_issues and grid_issues|length > 0 %}
+          <div class="mb-3">
+            <div class="d-flex flex-wrap gap-2">
+              {% for issue in grid_issues %}
+              <span class="badge bg-{{ issue.class }} d-flex align-items-center" 
+                    style="font-size: 0.9rem; padding: 0.5rem 0.75rem;"
+                    title="{{ issue.description }}">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                {{ issue.label }}
+                <span class="ms-2 badge bg-light text-dark">{{ issue.detail }}</span>
+              </span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          
+          <!-- 网格详细信息 -->
+          {% if grid_info %}
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <div class="alert alert-info mb-0">
+                <div class="row">
+                  {% if grid_info.grid_pp %}
+                  <div class="col-md-3">
+                    <strong><i class="bi bi-tag me-1"></i>网格标签：</strong>{{ grid_info.grid_pp }}
+                  </div>
+                  {% endif %}
+                  {% if grid_info.grid_area %}
+                  <div class="col-md-3">
+                    <strong><i class="bi bi-map me-1"></i>网格面积：</strong>{{ "%.2f"|format(grid_info.grid_area) }} km²
+                  </div>
+                  {% endif %}
+                  {% if grid_info.gird_dd %}
+                  <div class="col-md-3">
+                    <strong><i class="bi bi-building me-1"></i>归属单位：</strong>{{ grid_info.gird_dd }}
+                  </div>
+                  {% endif %}
+                  {% if grid_info.grid_regration %}
+                  <div class="col-md-3">
+                    <strong><i class="bi bi-person me-1"></i>负责人：</strong>{{ grid_info.grid_regration }}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          
+          <div class="row">
+            <div class="col-md-3">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-broadcast text-info me-2" style="font-size: 1.5rem;"></i>
+                <div>
+                  <small class="text-muted">4G小区数</small>
+                  <h4 class="mb-0">{{ cell_4g_count }}</h4>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-broadcast text-success me-2" style="font-size: 1.5rem;"></i>
+                <div>
+                  <small class="text-muted">5G小区数</small>
+                  <h4 class="mb-0">{{ cell_5g_count }}</h4>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-clock-history text-primary me-2" style="font-size: 1.5rem;"></i>
+                <div>
+                  <small class="text-muted">统计时间范围</small>
+                  <p class="mb-0 small">
+                    <strong>{{ time_range_display }}</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-speedometer2 text-secondary me-2" style="font-size: 1.5rem;"></i>
+                <div>
+                  <small class="text-muted">数据粒度</small>
+                  <p class="mb-0">
+                    <span class="badge bg-secondary">{{ granularity_display }}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4G指标 -->
+  {% if daily_traffic['4g'] or latest_hour_metrics['4g'] %}
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-4-circle-fill me-2"></i>4G网格指标
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- 当天累计流量 -->
+          <div class="mb-4">
+            <h6 class="text-muted mb-3">
+              <i class="bi bi-calendar-day me-1"></i>当天累计
+              <span class="badge bg-secondary ms-2">{{ time_range_display }}</span>
+            </h6>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">当天累计流量</h6>
+                    <h3 class="mb-0 text-primary">{{ daily_traffic['4g'].traffic_gb|smart_traffic }}</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">有数据小区数</h6>
+                    <h3 class="mb-0">{{ daily_traffic['4g'].cell_count }}</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 最新1小时指标 -->
+          {% if latest_hour_metrics['4g'] %}
+          <div>
+            <h6 class="text-muted mb-3">
+              <i class="bi bi-clock me-1"></i>最新1小时指标
+              <span class="badge bg-info ms-2">{{ latest_hour_metrics['4g'].ts }}</span>
+            </h6>
+            <div class="row g-3">
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">流量</h6>
+                    <h3 class="mb-0">{{ latest_hour_metrics['4g'].traffic_gb|smart_traffic }}</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">平均上行PRB利用率</h6>
+                    <h3 class="mb-0">{{ "%.2f"|format(latest_hour_metrics['4g'].avg_ul_prb_util) }}%</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">平均下行PRB利用率</h6>
+                    <h3 class="mb-0">{{ "%.2f"|format(latest_hour_metrics['4g'].avg_dl_prb_util) }}%</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">最大PRB利用率</h6>
+                    <h3 class="mb-0 {% if latest_hour_metrics['4g'].max_prb_util > 80 %}text-danger{% elif latest_hour_metrics['4g'].max_prb_util > 60 %}text-warning{% endif %}">
+                      {{ "%.2f"|format(latest_hour_metrics['4g'].max_prb_util) }}%
+                    </h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">平均无线接通率</h6>
+                    <h3 class="mb-0">{{ "%.2f"|format(latest_hour_metrics['4g'].avg_connect_rate) }}%</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">总RRC用户数</h6>
+                    <h3 class="mb-0">{{ latest_hour_metrics['4g'].total_rrc_users }}</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">最大RRC用户数</h6>
+                    <h3 class="mb-0">{{ latest_hour_metrics['4g'].max_rrc_users }}</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">有数据小区数</h6>
+                    <h3 class="mb-0">{{ latest_hour_metrics['4g'].cell_count }}</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div class="alert alert-warning mb-0">
+            <i class="bi bi-exclamation-triangle me-2"></i>暂无最新1小时指标数据
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 5G指标 -->
+  {% if daily_traffic['5g'] or latest_hour_metrics['5g'] %}
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-5-circle-fill me-2"></i>5G网格指标
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- 当天累计流量 -->
+          <div class="mb-4">
+            <h6 class="text-muted mb-3">
+              <i class="bi bi-calendar-day me-1"></i>当天累计
+              <span class="badge bg-secondary ms-2">{{ time_range_display }}</span>
+            </h6>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">当天累计流量</h6>
+                    <h3 class="mb-0 text-success">{{ daily_traffic['5g'].traffic_gb|smart_traffic }}</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">有数据小区数</h6>
+                    <h3 class="mb-0">{{ daily_traffic['5g'].cell_count }}</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 最新1小时指标 -->
+          {% if latest_hour_metrics['5g'] %}
+          <div>
+            <h6 class="text-muted mb-3">
+              <i class="bi bi-clock me-1"></i>最新1小时指标
+              <span class="badge bg-success ms-2">{{ latest_hour_metrics['5g'].ts }}</span>
+            </h6>
+            <div class="row g-3">
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">流量</h6>
+                    <h3 class="mb-0">{{ latest_hour_metrics['5g'].traffic_gb|smart_traffic }}</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">平均上行PRB利用率</h6>
+                    <h3 class="mb-0">{{ "%.2f"|format(latest_hour_metrics['5g'].avg_ul_prb_util) }}%</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">平均下行PRB利用率</h6>
+                    <h3 class="mb-0">{{ "%.2f"|format(latest_hour_metrics['5g'].avg_dl_prb_util) }}%</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">最大PRB利用率</h6>
+                    <h3 class="mb-0 {% if latest_hour_metrics['5g'].max_prb_util > 80 %}text-danger{% elif latest_hour_metrics['5g'].max_prb_util > 60 %}text-warning{% endif %}">
+                      {{ "%.2f"|format(latest_hour_metrics['5g'].max_prb_util) }}%
+                    </h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">平均无线接通率</h6>
+                    <h3 class="mb-0">{{ "%.2f"|format(latest_hour_metrics['5g'].avg_connect_rate) }}%</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">总RRC用户数</h6>
+                    <h3 class="mb-0">{{ latest_hour_metrics['5g'].total_rrc_users }}</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">最大RRC用户数</h6>
+                    <h3 class="mb-0">{{ latest_hour_metrics['5g'].max_rrc_users }}</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">有数据小区数</h6>
+                    <h3 class="mb-0">{{ latest_hour_metrics['5g'].cell_count }}</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div class="alert alert-warning mb-0">
+            <i class="bi bi-exclamation-triangle me-2"></i>暂无最新1小时指标数据
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 无数据提示 -->
+  {% if not daily_traffic['4g'] and not daily_traffic['5g'] and not latest_hour_metrics['4g'] and not latest_hour_metrics['5g'] %}
+  <div class="row">
+    <div class="col-12">
+      <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        该网格暂无指标数据
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 小区统计信息 -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-bar-chart-fill me-2"></i>小区统计
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-4">
+            <!-- 4G小区统计 -->
+            <div class="col-md-6">
+              <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                  <h6 class="mb-0">
+                    <i class="bi bi-4-circle-fill me-2"></i>4G小区统计
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div class="row text-center">
+                    <div class="col-4">
+                      <div class="p-3">
+                        <i class="bi bi-broadcast text-info" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2 mb-0">{{ cell_stats['4g']['total'] }}</h3>
+                        <small class="text-muted">总小区数</small>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="p-3">
+                        <i class="bi bi-exclamation-triangle text-danger" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2 mb-0">{{ cell_stats['4g']['no_traffic'] }}</h3>
+                        <small class="text-muted">无流量小区</small>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="p-3">
+                        <i class="bi bi-speedometer2 text-warning" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2 mb-0">{{ cell_stats['4g']['high_load'] }}</h3>
+                        <small class="text-muted">高负荷小区</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5G小区统计 -->
+            <div class="col-md-6">
+              <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                  <h6 class="mb-0">
+                    <i class="bi bi-5-circle-fill me-2"></i>5G小区统计
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div class="row text-center">
+                    <div class="col-4">
+                      <div class="p-3">
+                        <i class="bi bi-broadcast text-success" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2 mb-0">{{ cell_stats['5g']['total'] }}</h3>
+                        <small class="text-muted">总小区数</small>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="p-3">
+                        <i class="bi bi-exclamation-triangle text-danger" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2 mb-0">{{ cell_stats['5g']['no_traffic'] }}</h3>
+                        <small class="text-muted">无流量小区</small>
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="p-3">
+                        <i class="bi bi-speedometer2 text-warning" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2 mb-0">{{ cell_stats['5g']['high_load'] }}</h3>
+                        <small class="text-muted">高负荷小区</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

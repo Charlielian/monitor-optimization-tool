@@ -1,0 +1,729 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- 隐藏的CSRF token供JavaScript使用 -->
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+<div class="row g-4">
+  <!-- 页面标题 -->
+  <div class="col-12">
+    <div class="card shadow-sm border-danger">
+      <div class="card-header bg-danger text-white">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-shield-lock-fill me-2 fs-4"></i>
+          <h5 class="mb-0 fw-bold">管理员控制台</h5>
+          <span class="badge bg-light text-danger ms-3">仅管理员可见</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 系统概览 -->
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white" style="border-left: 4px solid #dc3545;">
+        <h6 class="mb-0 fw-bold text-danger">
+          <i class="bi bi-speedometer2 me-2"></i>系统概览
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <div class="card border-primary">
+              <div class="card-body text-center">
+                <i class="bi bi-database-fill text-primary fs-1 mb-2"></i>
+                <h3 class="mb-1">{{ stats.total_scenarios }}</h3>
+                <p class="text-muted mb-0">保障场景</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-success">
+              <div class="card-body text-center">
+                <i class="bi bi-broadcast-pin text-success fs-1 mb-2"></i>
+                <h3 class="mb-1">{{ stats.total_cells }}</h3>
+                <p class="text-muted mb-0">监控小区</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-info">
+              <div class="card-body text-center">
+                <i class="bi bi-people-fill text-info fs-1 mb-2"></i>
+                <h3 class="mb-1">{{ stats.total_users }}</h3>
+                <p class="text-muted mb-0">系统用户</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-warning">
+              <div class="card-body text-center">
+                <i class="bi bi-clock-history text-warning fs-1 mb-2"></i>
+                <h3 class="mb-1">{{ stats.uptime }}</h3>
+                <p class="text-muted mb-0">运行时间</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 用户管理 -->
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center" style="border-left: 4px solid #0d6efd;">
+        <h6 class="mb-0 fw-bold text-primary">
+          <i class="bi bi-people me-2"></i>用户管理
+        </h6>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+          <i class="bi bi-plus-circle me-1"></i>添加用户
+        </button>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="text-center"><i class="bi bi-person-badge me-1"></i>用户名</th>
+                <th class="text-center"><i class="bi bi-card-text me-1"></i>姓名</th>
+                <th class="text-center"><i class="bi bi-shield-check me-1"></i>角色</th>
+                <th class="text-center"><i class="bi bi-key-fill me-1"></i>页面权限</th>
+                <th class="text-center"><i class="bi bi-clock me-1"></i>最后登录</th>
+                <th class="text-center"><i class="bi bi-gear me-1"></i>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users %}
+              <tr>
+                <td class="text-center">
+                  <code class="text-primary">{{ user.username }}</code>
+                </td>
+                <td class="text-center">{{ user.name }}</td>
+                <td class="text-center">
+                  <span class="badge {% if user.role == 'admin' %}bg-danger{% else %}bg-secondary{% endif %}">
+                    <i class="bi bi-{% if user.role == 'admin' %}shield-fill-check{% else %}person{% endif %} me-1"></i>
+                    {{ user.role_name }}
+                  </span>
+                </td>
+                <td class="text-center">
+                  {% if user.role == 'admin' %}
+                    <span class="badge bg-danger fs-6 px-3 py-2">
+                      <i class="bi bi-infinity me-1"></i>全部权限
+                    </span>
+                  {% else %}
+                    <button class="btn btn-sm btn-info text-white" onclick="viewPermissions('{{ user.username }}')">
+                      <i class="bi bi-list-check me-1"></i>查看权限
+                    </button>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  <small class="text-muted">{{ user.last_login or '从未登录' }}</small>
+                </td>
+                <td class="text-center">
+                  <div class="btn-group" role="group">
+                    {% if user.role != 'admin' %}
+                    <button class="btn btn-sm btn-success" onclick="editPermissions('{{ user.username }}')">
+                      <i class="bi bi-key-fill me-1"></i>权限设置
+                    </button>
+                    {% endif %}
+                    <button class="btn btn-sm btn-warning" onclick="editUser('{{ user.username }}')">
+                      <i class="bi bi-shield-lock me-1"></i>改密码
+                    </button>
+                    {% if user.username != session.username %}
+                    <button class="btn btn-sm btn-danger" onclick="deleteUser('{{ user.username }}')">
+                      <i class="bi bi-trash me-1"></i>删除
+                    </button>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 系统日志 -->
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center" style="border-left: 4px solid #198754;">
+        <h6 class="mb-0 fw-bold text-success">
+          <i class="bi bi-journal-text me-2"></i>系统日志（最近50条）
+        </h6>
+        <button class="btn btn-sm btn-outline-success" onclick="refreshLogs()">
+          <i class="bi bi-arrow-clockwise me-1"></i>刷新
+        </button>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light sticky-top">
+              <tr>
+                <th style="width: 180px;"><i class="bi bi-clock me-1"></i>时间</th>
+                <th style="width: 100px;"><i class="bi bi-tag me-1"></i>级别</th>
+                <th style="width: 150px;"><i class="bi bi-person me-1"></i>用户</th>
+                <th><i class="bi bi-chat-left-text me-1"></i>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in logs %}
+              <tr>
+                <td><small class="text-muted">{{ log.timestamp }}</small></td>
+                <td>
+                  <span class="badge {% if log.level == 'ERROR' %}bg-danger{% elif log.level == 'WARNING' %}bg-warning{% else %}bg-info{% endif %}">
+                    {{ log.level }}
+                  </span>
+                </td>
+                <td><code class="text-secondary">{{ log.username or '-' }}</code></td>
+                <td><small>{{ log.message }}</small></td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" class="text-center text-muted py-4">暂无日志</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 数据库状态 -->
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white" style="border-left: 4px solid #6610f2;">
+        <h6 class="mb-0 fw-bold text-purple">
+          <i class="bi bi-server me-2"></i>PostgreSQL 状态
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span>连接状态：</span>
+          <span class="badge {% if db_status.pg_connected %}bg-success{% else %}bg-danger{% endif %}">
+            <i class="bi bi-{% if db_status.pg_connected %}check-circle{% else %}x-circle{% endif %} me-1"></i>
+            {{ '已连接' if db_status.pg_connected else '未连接' }}
+          </span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span>4G 最新数据：</span>
+          <small class="text-muted">{{ db_status.latest_4g or '无数据' }}</small>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <span>5G 最新数据：</span>
+          <small class="text-muted">{{ db_status.latest_5g or '无数据' }}</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MySQL 状态 -->
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white" style="border-left: 4px solid #fd7e14;">
+        <h6 class="mb-0 fw-bold text-orange">
+          <i class="bi bi-database me-2"></i>MySQL 状态
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span>连接状态：</span>
+          <span class="badge {% if db_status.mysql_connected %}bg-success{% else %}bg-danger{% endif %}">
+            <i class="bi bi-{% if db_status.mysql_connected %}check-circle{% else %}x-circle{% endif %} me-1"></i>
+            {{ '已连接' if db_status.mysql_connected else '未连接' }}
+          </span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span>工参表记录数：</span>
+          <strong>{{ db_status.engineering_params_count or 0 }}</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <span>缓存状态：</span>
+          <span class="badge bg-info">{{ db_status.cache_status or '未知' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 添加用户模态框 -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-person-plus me-2"></i>添加新用户
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ url_for('admin.admin_add_user') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">用户名 <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" name="username" required pattern="[a-zA-Z0-9_]+" title="只能包含字母、数字和下划线">
+            <small class="text-muted">只能包含字母、数字和下划线</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">姓名 <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">密码 <span class="text-danger">*</span></label>
+            <input type="password" class="form-control" name="password" required minlength="6">
+            <small class="text-muted">至少6个字符</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">角色 <span class="text-danger">*</span></label>
+            <select class="form-select" name="role" required>
+              <option value="user">普通用户</option>
+              <option value="admin">管理员</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle me-1"></i>添加
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 修改密码模态框 -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title">
+          <i class="bi bi-key me-2"></i>修改密码
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ url_for('admin.admin_change_password') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">用户名</label>
+            <input type="text" class="form-control" id="edit_username" name="username" readonly>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">新密码 <span class="text-danger">*</span></label>
+            <input type="password" class="form-control" name="new_password" required minlength="6">
+            <small class="text-muted">至少6个字符</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">确认新密码 <span class="text-danger">*</span></label>
+            <input type="password" class="form-control" id="confirm_password" required minlength="6">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="submit" class="btn btn-warning" onclick="return validatePassword()">
+            <i class="bi bi-check-circle me-1"></i>修改
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑权限模态框 -->
+<div class="modal fade" id="editPermissionsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-key-fill me-2"></i>编辑用户权限
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info mb-3">
+          <i class="bi bi-info-circle me-2"></i>
+          <strong>说明：</strong>勾选用户可以访问的页面。如果不勾选任何页面，用户将无法访问任何功能。
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label fw-semibold">用户信息</label>
+          <div class="card bg-light">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <strong>用户名：</strong><span id="perm_username" class="text-primary"></span>
+                </div>
+                <div class="col-md-4">
+                  <strong>姓名：</strong><span id="perm_name"></span>
+                </div>
+                <div class="col-md-4">
+                  <strong>角色：</strong><span id="perm_role" class="badge bg-secondary"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label fw-semibold">页面访问权限</label>
+          <div class="card">
+            <div class="card-body">
+              <div class="row g-3" id="permissions_checkboxes">
+                <!-- 动态生成复选框 -->
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label fw-semibold">当前权限状态</label>
+          <div class="card bg-light">
+            <div class="card-body">
+              <div id="current_permissions_status" class="text-muted">
+                加载中...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" onclick="resetPermissions()">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>重置为默认
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-success" onclick="savePermissions()">
+          <i class="bi bi-check-circle me-1"></i>保存
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 查看权限模态框 -->
+<div class="modal fade" id="viewPermissionsModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-eye me-2"></i>查看用户权限
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">用户名</label>
+          <div class="form-control-plaintext">
+            <code id="view_username" class="text-primary"></code>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">允许访问的页面</label>
+          <div id="view_permissions_list" class="list-group">
+            <!-- 动态生成 -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+        <button type="button" class="btn btn-primary" onclick="switchToEdit()">
+          <i class="bi bi-pencil me-1"></i>编辑权限
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 获取CSRF token
+function getCSRFToken() {
+  return document.querySelector('input[name="csrf_token"]').value;
+}
+
+// 当前正在编辑的用户
+let currentEditingUser = null;
+let currentUserPermissions = null;
+
+function editUser(username) {
+  // 显示修改密码模态框
+  document.getElementById('edit_username').value = username;
+  var modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+  modal.show();
+}
+
+function validatePassword() {
+  var newPassword = document.querySelector('input[name="new_password"]').value;
+  var confirmPassword = document.getElementById('confirm_password').value;
+  
+  if (newPassword !== confirmPassword) {
+    alert('两次输入的密码不一致，请重新输入');
+    return false;
+  }
+  
+  if (newPassword.length < 6) {
+    alert('密码长度至少为6个字符');
+    return false;
+  }
+  
+  return true;
+}
+
+function deleteUser(username) {
+  if (confirm('确定要删除用户 "' + username + '" 吗？\n\n此操作不可恢复！')) {
+    fetch('/admin/delete_user', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken()
+      },
+      body: JSON.stringify({username: username})
+    }).then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert(data.message);
+        location.reload();
+      } else {
+        alert('删除失败: ' + data.message);
+      }
+    }).catch(error => {
+      alert('删除失败: ' + error);
+    });
+  }
+}
+
+function refreshLogs() {
+  location.reload();
+}
+
+// 查看用户权限
+function viewPermissions(username) {
+  fetch('/admin/get_user_permissions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCSRFToken()
+    },
+    body: JSON.stringify({username: username})
+  }).then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      currentEditingUser = username;
+      currentUserPermissions = data;
+      
+      document.getElementById('view_username').textContent = data.username;
+      
+      const listContainer = document.getElementById('view_permissions_list');
+      listContainer.innerHTML = '';
+      
+      if (data.allowed_pages === null) {
+        // 未配置权限，默认全部
+        listContainer.innerHTML = `
+          <div class="list-group-item list-group-item-success">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong>默认权限：</strong>允许访问所有页面
+          </div>
+        `;
+      } else if (data.allowed_pages.length === 0) {
+        // 配置了空数组
+        listContainer.innerHTML = `
+          <div class="list-group-item list-group-item-danger">
+            <i class="bi bi-x-circle-fill me-2"></i>
+            <strong>无权限：</strong>不允许访问任何页面
+          </div>
+        `;
+      } else {
+        // 有具体权限配置
+        data.all_pages.forEach(page => {
+          const hasPermission = data.allowed_pages.includes(page.key);
+          const itemClass = hasPermission ? 'list-group-item-success' : 'list-group-item-light';
+          const icon = hasPermission ? 'check-circle-fill' : 'x-circle';
+          const iconColor = hasPermission ? 'text-success' : 'text-muted';
+          
+          listContainer.innerHTML += `
+            <div class="list-group-item ${itemClass}">
+              <i class="bi bi-${icon} ${iconColor} me-2"></i>
+              ${page.name}
+            </div>
+          `;
+        });
+      }
+      
+      var modal = new bootstrap.Modal(document.getElementById('viewPermissionsModal'));
+      modal.show();
+    } else {
+      alert('获取权限失败: ' + data.message);
+    }
+  }).catch(error => {
+    alert('获取权限失败: ' + error);
+  });
+}
+
+// 从查看模式切换到编辑模式
+function switchToEdit() {
+  bootstrap.Modal.getInstance(document.getElementById('viewPermissionsModal')).hide();
+  setTimeout(() => {
+    editPermissions(currentEditingUser);
+  }, 300);
+}
+
+// 编辑用户权限
+function editPermissions(username) {
+  fetch('/admin/get_user_permissions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCSRFToken()
+    },
+    body: JSON.stringify({username: username})
+  }).then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      currentEditingUser = username;
+      currentUserPermissions = data;
+      
+      // 填充用户信息
+      document.getElementById('perm_username').textContent = data.username;
+      document.getElementById('perm_name').textContent = data.name;
+      document.getElementById('perm_role').textContent = data.role === 'admin' ? '管理员' : '普通用户';
+      
+      // 生成复选框
+      const checkboxContainer = document.getElementById('permissions_checkboxes');
+      checkboxContainer.innerHTML = '';
+      
+      data.all_pages.forEach(page => {
+        const isChecked = data.allowed_pages && data.allowed_pages.includes(page.key);
+        checkboxContainer.innerHTML += `
+          <div class="col-md-6">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="${page.key}" 
+                     id="perm_${page.key}" ${isChecked ? 'checked' : ''} 
+                     onchange="updatePermissionStatus()">
+              <label class="form-check-label" for="perm_${page.key}">
+                <i class="bi bi-file-earmark-text me-1"></i>${page.name}
+              </label>
+            </div>
+          </div>
+        `;
+      });
+      
+      // 更新权限状态显示
+      updatePermissionStatus();
+      
+      var modal = new bootstrap.Modal(document.getElementById('editPermissionsModal'));
+      modal.show();
+    } else {
+      alert('获取权限失败: ' + data.message);
+    }
+  }).catch(error => {
+    alert('获取权限失败: ' + error);
+  });
+}
+
+// 更新权限状态显示
+function updatePermissionStatus() {
+  const checkboxes = document.querySelectorAll('#permissions_checkboxes input[type="checkbox"]');
+  const checkedPages = Array.from(checkboxes)
+    .filter(cb => cb.checked)
+    .map(cb => cb.value);
+  
+  const statusDiv = document.getElementById('current_permissions_status');
+  
+  if (checkedPages.length === 0) {
+    statusDiv.innerHTML = `
+      <div class="alert alert-danger mb-0">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>警告：</strong>未勾选任何页面，用户将无法访问任何功能！
+      </div>
+    `;
+  } else if (checkedPages.length === checkboxes.length) {
+    statusDiv.innerHTML = `
+      <div class="alert alert-success mb-0">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <strong>已选择：</strong>全部 ${checkedPages.length} 个页面（完整权限）
+      </div>
+    `;
+  } else {
+    const pageNames = currentUserPermissions.all_pages
+      .filter(p => checkedPages.includes(p.key))
+      .map(p => p.name)
+      .join('、');
+    
+    statusDiv.innerHTML = `
+      <div class="alert alert-info mb-0">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        <strong>已选择：</strong>${checkedPages.length} 个页面<br>
+        <small>${pageNames}</small>
+      </div>
+    `;
+  }
+}
+
+// 保存权限
+function savePermissions() {
+  const checkboxes = document.querySelectorAll('#permissions_checkboxes input[type="checkbox"]');
+  const allowedPages = Array.from(checkboxes)
+    .filter(cb => cb.checked)
+    .map(cb => cb.value);
+  
+  if (allowedPages.length === 0) {
+    if (!confirm('您没有勾选任何页面，用户将无法访问任何功能。\n\n确定要继续吗？')) {
+      return;
+    }
+  }
+  
+  fetch('/admin/update_user_permissions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCSRFToken()
+    },
+    body: JSON.stringify({
+      username: currentEditingUser,
+      allowed_pages: allowedPages
+    })
+  }).then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert(data.message + '\n\n用户需要重新登录后权限才会生效。');
+      bootstrap.Modal.getInstance(document.getElementById('editPermissionsModal')).hide();
+      location.reload();
+    } else {
+      alert('保存失败: ' + data.message);
+    }
+  }).catch(error => {
+    alert('保存失败: ' + error);
+  });
+}
+
+// 重置权限为默认
+function resetPermissions() {
+  if (!confirm('确定要重置用户权限为默认吗？\n\n重置后，用户将可以访问所有页面（向后兼容模式）。')) {
+    return;
+  }
+  
+  fetch('/admin/reset_user_permissions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCSRFToken()
+    },
+    body: JSON.stringify({username: currentEditingUser})
+  }).then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert(data.message);
+      bootstrap.Modal.getInstance(document.getElementById('editPermissionsModal')).hide();
+      location.reload();
+    } else {
+      alert('重置失败: ' + data.message);
+    }
+  }).catch(error => {
+    alert('重置失败: ' + error);
+  });
+}
+</script>
+{% endblock %}

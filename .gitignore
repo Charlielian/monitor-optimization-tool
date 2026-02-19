@@ -1,0 +1,48 @@
+# 虚拟环境
+venv/
+env/
+
+# 缓存文件
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+
+# 日志文件
+logs/
+*.log
+*.log.*
+
+# 临时文件
+temp/
+temp_*.txt
+
+# 配置文件
+config.json
+config - 副本.json
+config.json_bak
+scheduler_config.json
+
+# IDE 文件
+.vscode/
+.trae/
+.claude/
+
+# 系统文件
+.DS_Store
+
+# 测试文件
+*_test.py
+
+# 数据库文件
+db/*.db
+db/*.sqlite
+
+# 其他
+query
+queryex
+restart_server.bat
+yj_grid.xlsx
+waitress-3.0.2-py3-none-any.whl
+
+# 小区配置目录
+小区配置/

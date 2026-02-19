@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm border-primary">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-person-badge me-2"></i>会话信息
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if session.get('logged_in') %}
+          <div class="row g-3">
+            <!-- 用户信息 -->
+            <div class="col-md-6">
+              <div class="card bg-light">
+                <div class="card-body">
+                  <h6 class="card-title">
+                    <i class="bi bi-person-circle me-2"></i>用户信息
+                  </h6>
+                  <table class="table table-sm mb-0">
+                    <tr>
+                      <td><strong>用户名</strong></td>
+                      <td>{{ session.get('username') }}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>姓名</strong></td>
+                      <td>{{ session.get('name') }}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>角色</strong></td>
+                      <td>
+                        {% if session.get('role') == 'admin' %}
+                        <span class="badge bg-danger">管理员</span>
+                        {% else %}
+                        <span class="badge bg-secondary">普通用户</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- 会话信息 -->
+            <div class="col-md-6">
+              <div class="card bg-light">
+                <div class="card-body">
+                  <h6 class="card-title">
+                    <i class="bi bi-clock-history me-2"></i>会话信息
+                  </h6>
+                  <table class="table table-sm mb-0">
+                    <tr>
+                      <td><strong>登录IP</strong></td>
+                      <td>{{ session.get('login_ip') }}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>登录时间</strong></td>
+                      <td id="loginTime">计算中...</td>
+                    </tr>
+                    <tr>
+                      <td><strong>最后活动</strong></td>
+                      <td id="lastActivity">计算中...</td>
+                    </tr>
+                    <tr>
+                      <td><strong>会话状态</strong></td>
+                      <td>
+                        <span class="badge bg-success">
+                          <i class="bi bi-check-circle me-1"></i>活跃
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- 超时设置 -->
+            <div class="col-12">
+              <div class="card bg-light">
+                <div class="card-body">
+                  <h6 class="card-title">
+                    <i class="bi bi-hourglass-split me-2"></i>超时设置
+                  </h6>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <p class="mb-2">
+                        <strong>会话超时时间：</strong>
+                        <span class="badge bg-info">{{ session_timeout_hours }} 小时</span>
+                      </p>
+                      <p class="text-muted small mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        如果 {{ session_timeout_hours }} 小时内没有任何操作，会话将自动过期，需要重新登录。
+                      </p>
+                    </div>
+                    <div class="col-md-6">
+                      <p class="mb-2">
+                        <strong>会话有效期：</strong>
+                        <span class="badge bg-info">{{ session_lifetime_hours }} 小时</span>
+                      </p>
+                      <p class="text-muted small mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        会话的最大有效期，即使持续活动也会在此时间后过期。
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <hr>
+                  
+                  <div class="progress" style="height: 25px;">
+                    <div id="sessionProgress" class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%">
+                      <span id="sessionProgressText">计算中...</span>
+                    </div>
+                  </div>
+                  <p class="text-muted small mt-2 mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    距离会话超时还有 <strong id="timeRemaining">-</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="col-12">
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+                  <i class="bi bi-arrow-left me-1"></i>返回首页
+                </a>
+                <a href="{{ url_for('logout') }}" class="btn btn-danger">
+                  <i class="bi bi-box-arrow-right me-1"></i>退出登录
+                </a>
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            您尚未登录，请先<a href="{{ url_for('login') }}" class="alert-link">登录</a>。
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 安全提示 -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm border-info">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0">
+            <i class="bi bi-shield-check me-2"></i>安全提示
+          </h6>
+        </div>
+        <div class="card-body">
+          <ul class="mb-0">
+            <li>请勿在公共电脑上保持登录状态</li>
+            <li>使用完毕后请及时退出登录</li>
+            <li>如发现异常登录，请立即修改密码</li>
+            <li>不要与他人共享您的账号密码</li>
+            <li>定期更换密码以保证账号安全</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 会话信息
+const loginTime = {{ session.get('login_time', 0) }};
+const lastActivity = {{ session.get('last_activity', 0) }};
+const sessionTimeoutHours = {{ session_timeout_hours }};
+const sessionLifetimeHours = {{ session_lifetime_hours }};
+
+// 格式化时间
+function formatTime(seconds) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  if (hours > 0) {
+    return `${hours}小时${minutes}分钟`;
+  } else if (minutes > 0) {
+    return `${minutes}分钟${secs}秒`;
+  } else {
+    return `${secs}秒`;
+  }
+}
+
+// 格式化日期时间
+function formatDateTime(timestamp) {
+  const date = new Date(timestamp * 1000);
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+}
+
+// 更新会话信息
+function updateSessionInfo() {
+  const now = Date.now() / 1000;
+  
+  // 登录时长
+  if (loginTime > 0) {
+    const loginDuration = now - loginTime;
+    document.getElementById('loginTime').textContent = formatDateTime(loginTime) + ' (' + formatTime(loginDuration) + '前)';
+  }
+  
+  // 最后活动时间
+  if (lastActivity > 0) {
+    const inactiveDuration = now - lastActivity;
+    document.getElementById('lastActivity').textContent = formatDateTime(lastActivity) + ' (' + formatTime(inactiveDuration) + '前)';
+    
+    // 计算剩余时间
+    const timeoutSeconds = sessionTimeoutHours * 3600;
+    const remainingSeconds = timeoutSeconds - inactiveDuration;
+    
+    if (remainingSeconds > 0) {
+      document.getElementById('timeRemaining').textContent = formatTime(remainingSeconds);
+      
+      // 更新进度条
+      const progress = (inactiveDuration / timeoutSeconds) * 100;
+      const progressBar = document.getElementById('sessionProgress');
+      progressBar.style.width = progress + '%';
+      
+      // 根据剩余时间改变颜色
+      if (progress < 50) {
+        progressBar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-success';
+      } else if (progress < 80) {
+        progressBar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-warning';
+      } else {
+        progressBar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-danger';
+      }
+      
+      document.getElementById('sessionProgressText').textContent = progress.toFixed(1) + '%';
+    } else {
+      document.getElementById('timeRemaining').textContent = '已超时';
+      document.getElementById('sessionProgress').style.width = '100%';
+      document.getElementById('sessionProgress').className = 'progress-bar bg-danger';
+      document.getElementById('sessionProgressText').textContent = '会话已超时';
+      
+      // 显示警告
+      alert('会话已超时，请重新登录');
+      window.location.href = '{{ url_for("login") }}';
+    }
+  }
+}
+
+// 页面加载时更新
+updateSessionInfo();
+
+// 每秒更新一次
+setInterval(updateSessionInfo, 1000);
+</script>
+{% endblock %}

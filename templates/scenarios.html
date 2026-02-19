@@ -1,0 +1,679 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row g-4">
+  <!-- 左侧场景管理 -->
+  <div class="col-lg-4">
+    <div class="card shadow-lg">
+      <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-folder2 me-2 fs-4"></i>
+          <h5 class="mb-0 fw-bold">场景管理</h5>
+        </div>
+      </div>
+      <div class="card-body p-4">
+        <!-- 创建场景表单 -->
+        <div class="card border-primary mb-4">
+          <div class="card-header bg-primary bg-opacity-10 border-primary">
+            <h6 class="mb-0 fw-bold text-primary">
+              <i class="bi bi-plus-circle me-2"></i>创建新场景
+            </h6>
+          </div>
+          <div class="card-body">
+            <form method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="action" value="create">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-tag text-primary me-1"></i>场景名
+                  <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control" name="name" required placeholder="请输入场景名称">
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-card-text text-primary me-1"></i>描述
+                </label>
+                <textarea class="form-control" name="desc" rows="2" placeholder="请输入场景描述（可选）"></textarea>
+              </div>
+              <button class="btn btn-primary w-100" type="submit">
+                <i class="bi bi-plus-circle me-1"></i>创建场景
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- 场景选择 -->
+        <div class="card border-info mb-4">
+          <div class="card-header bg-info bg-opacity-10 border-info">
+            <h6 class="mb-0 fw-bold text-info">
+              <i class="bi bi-list-ul me-2"></i>选择场景
+            </h6>
+          </div>
+          <div class="card-body">
+            <form method="get">
+              <label class="form-label fw-semibold">
+                <i class="bi bi-folder-open text-info me-1"></i>当前场景
+              </label>
+              <select class="form-select" name="scenario_id" onchange="this.form.submit()">
+                {% for s in scenarios %}
+                <option value="{{ s.id }}" {% if s.id == selected_id %}selected{% endif %}>
+                  {{ s.scenario_name }}
+                  {% if s.description %}({{ s.description }}){% endif %}
+                </option>
+                {% endfor %}
+              </select>
+              <div class="form-text">
+                <i class="bi bi-info-circle me-1"></i>选择后自动切换场景
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- 删除场景按钮 -->
+        <div class="card border-danger">
+          <div class="card-header bg-danger bg-opacity-10 border-danger">
+            <h6 class="mb-0 fw-bold text-danger">
+              <i class="bi bi-exclamation-triangle me-2"></i>危险操作
+            </h6>
+          </div>
+          <div class="card-body">
+            <form method="post" onsubmit="return confirm('⚠️ 确认删除该场景？\n\n删除后关联的小区数据也将被移除！\n此操作不可恢复！');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="scenario_id" value="{{ selected_id }}">
+              <button class="btn btn-danger w-100" type="submit" {% if not selected_id %}disabled{% endif %}>
+                <i class="bi bi-trash3 me-1"></i>删除当前场景
+              </button>
+            </form>
+            <small class="text-muted d-block mt-2">
+              <i class="bi bi-shield-exclamation me-1"></i>此操作将永久删除场景及其关联的所有小区
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧关联小区管理 -->
+  <div class="col-lg-8">
+    <div class="card shadow-lg">
+      <div class="card-header bg-gradient text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-building me-2 fs-4"></i>
+          <h5 class="mb-0 fw-bold">关联小区管理</h5>
+        </div>
+        <span class="badge bg-white text-primary rounded-pill px-3 py-2 shadow-sm">
+          <i class="bi bi-dot me-1"></i>共 {{ cells|length }} 个小区
+        </span>
+      </div>
+      <div class="card-body p-4">
+        {% if selected_id %}
+        <!-- 批量导入区域 -->
+        <div class="card mb-4 border-success shadow-sm">
+          <div class="card-header bg-success bg-opacity-10 border-success">
+            <h6 class="mb-0 fw-bold text-success">
+              <i class="bi bi-upload me-2"></i>批量导入小区
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-file-earmark-excel text-success me-1"></i>上传Excel文件
+                  <span class="text-danger">*</span>
+                </label>
+                <form method="post" enctype="multipart/form-data" id="importForm">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="action" value="import_cells">
+                  <input type="hidden" name="scenario_id" value="{{ selected_id }}">
+                  <div class="input-group">
+                    <input type="file" class="form-control" name="file" accept=".xlsx,.xls" required>
+                    <button class="btn btn-success" type="submit">
+                      <i class="bi bi-upload me-1"></i>导入
+                    </button>
+                  </div>
+                  <div class="form-text">
+                    <i class="bi bi-info-circle me-1"></i>支持 .xlsx 格式，请下载模板查看格式要求
+                  </div>
+                </form>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-download text-success me-1"></i>模板与导出
+                </label>
+                <div class="d-grid gap-2">
+                  <a href="{{ url_for('export.download_cell_template') }}" class="btn btn-outline-success">
+                    <i class="bi bi-download me-1"></i>下载导入模板
+                  </a>
+                  <a href="{{ url_for('export.export_scenario_cells', scenario_id=selected_id) }}" class="btn btn-outline-info">
+                    <i class="bi bi-file-earmark-excel me-1"></i>导出当前场景小区
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 单个添加区域 -->
+        <div class="card mb-4 border-primary shadow-sm">
+          <div class="card-header bg-primary bg-opacity-10 border-primary">
+            <h6 class="mb-0 fw-bold text-primary">
+              <i class="bi bi-plus-square me-2"></i>单个添加小区
+            </h6>
+          </div>
+          <div class="card-body">
+            <form class="row g-3" method="post" id="addCellForm">
+              <input type="hidden" name="action" value="add_cell">
+              <input type="hidden" name="scenario_id" value="{{ selected_id }}">
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-hash text-primary me-1"></i>小区ID
+                  <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control" name="cell_id" required placeholder="请输入小区ID">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-tag text-primary me-1"></i>小区名
+                </label>
+                <input type="text" class="form-control" name="cell_name" placeholder="请输入小区名称">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-pin-map text-primary me-1"></i>CGI
+                </label>
+                <input type="text" class="form-control" name="cgi" placeholder="请输入CGI">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-broadcast text-primary me-1"></i>制式
+                </label>
+                <select class="form-select" name="network_type">
+                  <option value="4G">4G</option>
+                  <option value="5G">5G</option>
+                </select>
+              </div>
+              <div class="col-md-1 d-flex align-items-end">
+                <button class="btn btn-primary w-100" type="submit" title="添加小区">
+                  <i class="bi bi-plus-lg"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        {% else %}
+        <!-- 未选择场景提示 -->
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+          <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+          <div>
+            <h6 class="alert-heading mb-1">请先选择场景</h6>
+            <p class="mb-0">在左侧选择一个场景后，即可添加或导入小区数据</p>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- 小区列表 -->
+        <div class="card border-secondary">
+          <div class="card-header bg-secondary bg-opacity-10 border-secondary">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="mb-0 fw-bold text-secondary">
+                <i class="bi bi-table me-2"></i>小区列表
+              </h6>
+              {% if cells %}
+              <div>
+                <span class="badge bg-success me-2">4G: {{ cells|selectattr('network_type', 'equalto', '4G')|list|length }}</span>
+                <span class="badge bg-primary">5G: {{ cells|selectattr('network_type', 'equalto', '5G')|list|length }}</span>
+              </div>
+              {% endif %}
+            </div>
+            <!-- 小区过滤框 -->
+            <div class="input-group">
+              <span class="input-group-text bg-white border-right-0">
+                <i class="bi bi-search text-secondary"></i>
+              </span>
+              <input type="text" id="cell-filter" class="form-control border-left-0" placeholder="搜索小区名称或CGI..." aria-label="搜索小区">
+              <button class="btn btn-outline-secondary" type="button" id="clear-filter" title="清除过滤">
+                <i class="bi bi-x-circle"></i>
+              </button>
+            </div>
+            <div class="form-text text-muted mt-1">
+              <i class="bi bi-info-circle me-1"></i>支持实时过滤小区名称和CGI
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+              <table class="table table-hover table-striped mb-0">
+                <thead class="table-light sticky-top">
+                  <tr>
+                    <th class="text-center" style="min-width: 150px;">
+                      <i class="bi bi-hash me-1"></i>小区ID
+                    </th>
+                    <th class="text-center" style="min-width: 180px;">
+                      <i class="bi bi-tag me-1"></i>小区名
+                    </th>
+                    <th class="text-center" style="min-width: 200px;">
+                      <i class="bi bi-pin-map me-1"></i>CGI
+                    </th>
+                    <th class="text-center" style="min-width: 100px;">
+                      <i class="bi bi-broadcast me-1"></i>制式
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-gear me-1"></i>操作
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for c in cells %}
+                  <tr>
+                    <td class="text-center"><code class="text-primary">{{ c.cell_id }}</code></td>
+                    <td class="text-center">{{ c.cell_name or '-' }}</td>
+                    <td class="text-center"><code class="text-secondary">{{ c.cgi or '-' }}</code></td>
+                    <td class="text-center">
+                      <span class="badge rounded-pill {% if c.network_type == '4G' %}bg-success{% else %}bg-primary{% endif %} px-3 py-1">
+                        {{ c.network_type }}
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <form class="d-inline">
+                        <input type="hidden" name="action" value="remove_cell">
+                        <input type="hidden" name="scenario_id" value="{{ selected_id }}">
+                        <input type="hidden" name="cell_id" value="{{ c.cell_id }}">
+                        <input type="hidden" name="network_type" value="{{ c.network_type }}">
+                        <button class="btn btn-danger btn-sm remove-cell-btn" type="button" data-cell-name="{{ c.cell_name or '未命名' }}">
+                          <i class="bi bi-x-circle me-1"></i>移除
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% else %}
+                  <tr>
+                    <td colspan="5" class="text-center text-muted py-5">
+                      <i class="bi bi-inbox display-1 mb-3 d-block"></i>
+                      <h5 class="text-muted">暂无关联小区</h5>
+                      {% if selected_id %}
+                      <p class="mb-0">请使用上方表单添加或导入小区</p>
+                      {% else %}
+                      <p class="mb-0">请先在左侧选择一个场景</p>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {% if cells %}
+          <div class="card-footer bg-light text-muted small">
+            <i class="bi bi-info-circle me-1"></i>
+            提示：点击"移除"按钮可删除小区，支持批量导入和导出
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 确保DOM加载完成后再执行
+(function() {
+  'use strict';
+  
+  // AJAX添加小区
+  const addCellForm = document.getElementById('addCellForm');
+  if (addCellForm) {
+    addCellForm.addEventListener('submit', function(e) {
+      e.preventDefault(); // 阻止默认提交
+      
+      const formData = new FormData(this);
+      const data = {
+        action: formData.get('action'),
+        scenario_id: formData.get('scenario_id'),
+        cell_id: formData.get('cell_id').trim(),
+        cell_name: formData.get('cell_name').trim(),
+        cgi: formData.get('cgi').trim(),
+        network_type: formData.get('network_type')
+      };
+      
+      if (!data.cell_id) {
+        showToast('请输入小区ID', 'warning');
+        return;
+      }
+      
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const originalHTML = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+      
+      // 发送AJAX请求
+      fetch('/api/scenarios/cells', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          showToast(result.message, 'success');
+          // 清空表单
+          this.reset();
+          // 更新小区列表
+          updateCellTable(result.cells);
+          // 更新统计数字
+          updateCellStats(result.cells);
+        } else {
+          showToast(result.message || '添加失败', 'danger');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showToast('网络错误，请重试', 'danger');
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalHTML;
+      });
+    });
+  }
+  
+  // AJAX移除小区
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-cell-btn')) {
+      e.preventDefault();
+      const btn = e.target.closest('.remove-cell-btn');
+      const form = btn.closest('form');
+      
+      const cellId = form.querySelector('input[name="cell_id"]').value;
+      const cellName = btn.dataset.cellName || '未命名';
+      
+      if (!confirm(`⚠️ 确认移除该小区？\n\n小区ID: ${cellId}\n小区名: ${cellName}\n\n此操作不可恢复！`)) {
+        return;
+      }
+      
+      const formData = new FormData(form);
+      const data = {
+        action: formData.get('action'),
+        scenario_id: formData.get('scenario_id'),
+        cell_id: formData.get('cell_id'),
+        network_type: formData.get('network_type')
+      };
+      
+      btn.disabled = true;
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+      
+      fetch('/api/scenarios/cells', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          showToast(result.message, 'success');
+          // 更新小区列表
+          updateCellTable(result.cells);
+          // 更新统计数字
+          updateCellStats(result.cells);
+        } else {
+          showToast(result.message || '移除失败', 'danger');
+          btn.disabled = false;
+          btn.innerHTML = originalHTML;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showToast('网络错误，请重试', 'danger');
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+      });
+    }
+  });
+  
+  // 更新小区表格
+  function updateCellTable(cells) {
+    const tbody = document.querySelector('.table tbody');
+    if (!tbody) return;
+    
+    if (!cells || cells.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center text-muted py-5">
+            <i class="bi bi-inbox display-1 mb-3 d-block"></i>
+            <h5 class="text-muted">暂无关联小区</h5>
+            <p class="mb-0">请使用上方表单添加或导入小区</p>
+          </td>
+        </tr>
+      `;
+      // 应用过滤
+      if (typeof filterCells === 'function') {
+        filterCells();
+      }
+      return;
+    }
+    
+    const selectedId = document.querySelector('input[name="scenario_id"]').value;
+    tbody.innerHTML = cells.map(c => `
+      <tr>
+        <td class="text-center"><code class="text-primary">${c.cell_id}</code></td>
+        <td class="text-center">${c.cell_name || '-'}</td>
+        <td class="text-center"><code class="text-secondary">${c.cgi || '-'}</code></td>
+        <td class="text-center">
+          <span class="badge rounded-pill ${c.network_type === '4G' ? 'bg-success' : 'bg-primary'} px-3 py-1">
+            ${c.network_type}
+          </span>
+        </td>
+        <td class="text-center">
+          <form class="d-inline">
+            <input type="hidden" name="action" value="remove_cell">
+            <input type="hidden" name="scenario_id" value="${selectedId}">
+            <input type="hidden" name="cell_id" value="${c.cell_id}">
+            <input type="hidden" name="network_type" value="${c.network_type}">
+            <button class="btn btn-danger btn-sm remove-cell-btn" type="button" data-cell-name="${c.cell_name || '未命名'}">
+              <i class="bi bi-x-circle me-1"></i>移除
+            </button>
+          </form>
+        </td>
+      </tr>
+    `).join('');
+    
+    // 应用过滤
+    if (typeof filterCells === 'function') {
+      filterCells();
+    }
+  }
+  
+  // 更新统计数字
+  function updateCellStats(cells) {
+    // 更新总数
+    const totalBadge = document.querySelector('.card-header .badge');
+    if (totalBadge) {
+      totalBadge.innerHTML = `<i class="bi bi-dot me-1"></i>共 ${cells.length} 个小区`;
+    }
+    
+    // 更新4G/5G统计
+    const statsDiv = document.querySelector('.card-header .badge.bg-primary');
+    if (statsDiv && statsDiv.parentElement) {
+      const count4G = cells.filter(c => c.network_type === '4G').length;
+      const count5G = cells.filter(c => c.network_type === '5G').length;
+      statsDiv.parentElement.innerHTML = `
+        <span class="badge bg-success me-2">4G: ${count4G}</span>
+        <span class="badge bg-primary">5G: ${count5G}</span>
+      `;
+    }
+  }
+  
+  // 显示Toast提示
+  function showToast(message, type = 'info') {
+    // 创建toast容器（如果不存在）
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+      toastContainer.style.zIndex = '9999';
+      document.body.appendChild(toastContainer);
+    }
+    
+    // 创建toast元素
+    const toastId = 'toast-' + Date.now();
+    const bgClass = type === 'success' ? 'bg-success' : 
+                    type === 'danger' ? 'bg-danger' : 
+                    type === 'warning' ? 'bg-warning' : 'bg-info';
+    
+    const toastHTML = `
+      <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body">
+            <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'danger' ? 'x-circle' : 'info-circle'} me-2"></i>
+            ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    `;
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+    
+    // 显示toast
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, {
+      autohide: true,
+      delay: 3000
+    });
+    toast.show();
+    
+    // 移除toast元素
+    toastElement.addEventListener('hidden.bs.toast', function() {
+      this.remove();
+    });
+  }
+  
+  // 导入表单验证
+  const importForm = document.getElementById('importForm');
+  if (importForm) {
+    importForm.addEventListener('submit', function(e) {
+      const fileInput = this.querySelector('input[type="file"]');
+      if (!fileInput.files || fileInput.files.length === 0) {
+        e.preventDefault();
+        showToast('请选择要导入的Excel文件', 'warning');
+        return false;
+      }
+      
+      const file = fileInput.files[0];
+      const fileName = file.name.toLowerCase();
+      
+      // 验证文件格式
+      if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+        e.preventDefault();
+        showToast('只支持Excel文件格式（.xlsx 或 .xls）', 'danger');
+        return false;
+      }
+      
+      // 验证文件大小（限制10MB）
+      if (file.size > 10 * 1024 * 1024) {
+        e.preventDefault();
+        showToast('文件大小不能超过10MB', 'danger');
+        return false;
+      }
+      
+      // 显示加载提示
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>导入中...';
+      
+      // 如果导入失败，恢复按钮状态
+      setTimeout(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }, 30000); // 30秒超时
+    });
+  }
+  
+  // 场景选择提示
+  const scenarioSelect = document.querySelector('select[name="scenario_id"]');
+  if (scenarioSelect) {
+    scenarioSelect.addEventListener('change', function() {
+      // 显示加载提示
+      showToast('正在切换场景...', 'info');
+    });
+  }
+  
+  // 小区列表过滤功能
+  const cellFilter = document.getElementById('cell-filter');
+  const clearFilterBtn = document.getElementById('clear-filter');
+  const cellTableBody = document.querySelector('.table tbody');
+  
+  if (cellFilter && cellTableBody) {
+    // 过滤函数
+    function filterCells() {
+      const filterText = cellFilter.value.toLowerCase().trim();
+      const rows = cellTableBody.querySelectorAll('tr');
+      let visibleCount = 0;
+      
+      rows.forEach(row => {
+        // 跳过空状态行
+        if (row.querySelector('.bi-inbox')) {
+          row.style.display = filterText ? 'none' : '';
+          return;
+        }
+        
+        // 获取小区名称和CGI
+        const cellName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        const cgi = row.querySelector('td:nth-child(3) code').textContent.toLowerCase();
+        
+        // 检查是否匹配
+        const matches = cellName.includes(filterText) || cgi.includes(filterText);
+        row.style.display = matches ? '' : 'none';
+        if (matches) visibleCount++;
+      });
+      
+      // 更新显示的数量
+      updateFilteredCount(visibleCount);
+    }
+    
+    // 更新过滤后的数量
+    function updateFilteredCount(count) {
+      const totalBadge = document.querySelector('.card-header .badge');
+      if (totalBadge) {
+        const originalText = totalBadge.textContent;
+        const totalMatch = originalText.match(/共 (\d+) 个小区/);
+        if (totalMatch) {
+          const total = parseInt(totalMatch[1]);
+          if (cellFilter.value.trim()) {
+            totalBadge.innerHTML = `<i class="bi bi-filter me-1"></i>显示 ${count} / ${total} 个小区`;
+            totalBadge.className = 'badge bg-info text-white rounded-pill px-3 py-2 shadow-sm';
+          } else {
+            totalBadge.innerHTML = `<i class="bi bi-dot me-1"></i>共 ${total} 个小区`;
+            totalBadge.className = 'badge bg-white text-primary rounded-pill px-3 py-2 shadow-sm';
+          }
+        }
+      }
+    }
+    
+    // 输入事件监听
+    cellFilter.addEventListener('input', filterCells);
+    
+    // 清除过滤按钮
+    if (clearFilterBtn) {
+      clearFilterBtn.addEventListener('click', function() {
+        cellFilter.value = '';
+        filterCells();
+      });
+    }
+    
+    // 初始过滤
+    filterCells();
+  }
+  
+})(); // 立即执行函数结束
+</script>
+{% endblock %}
+
+

@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}网格小区体检 - {{ grid_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- 面包屑导航 -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('grid.grid') }}">网格监控</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('grid.grid_detail', grid_id=grid_id) }}">{{ grid_name }}</a></li>
+            <li class="breadcrumb-item active">小区体检</li>
+        </ol>
+    </nav>
+
+    <!-- 标题和操作栏 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="bi bi-heart-pulse"></i> 网格小区体检
+            </h2>
+            <p class="text-muted mb-0">
+                网格ID: {{ grid_id }} | 网格名称: {{ grid_name or grid_id }}
+                {% if grid_pp %}
+                <span class="badge bg-warning text-dark ms-2">{{ grid_pp }}</span>
+                {% endif %}
+            </p>
+            <small class="text-muted">体检时间: {{ check_time.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+        </div>
+        <div>
+            <a href="{{ url_for('grid.export_grid_health_check', grid_id=grid_id) }}" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel"></i> 导出体检结果
+            </a>
+            <a href="{{ url_for('grid.grid_detail', grid_id=grid_id) }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> 返回网格详情
+            </a>
+        </div>
+    </div>
+
+    <!-- 体检汇总卡片 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">总小区数</h5>
+                    <h2 class="text-primary">{{ total_cells }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">健康小区</h5>
+                    <h2 class="text-success">{{ healthy_cells_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">不健康小区</h5>
+                    <h2 class="text-danger">{{ unhealthy_cells_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">健康率</h5>
+                    <h2 class="text-info">{{ healthy_rate }}%</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 不健康小区详情（按原因分组） -->
+    {% if unhealthy_cells_count > 0 %}
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> 不健康小区详情（{{ unhealthy_cells_count }}个）</h5>
+        </div>
+        <div class="card-body">
+            <!-- 按原因分组显示 -->
+            {% for reason, cells in unhealthy_by_reason.items() %}
+            <div class="mb-4">
+                <h6 class="text-danger">
+                    <i class="bi bi-dot"></i> {{ reason }} ({{ cells|length }}个)
+                </h6>
+                <div class="table-responsive table-fixed-header">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light sticky-header">
+                            <tr>
+                                <th>小区CGI</th>
+                                <th>小区名称</th>
+                                <th>制式</th>
+                                <th>有性能数据</th>
+                                <th>流量(GB)</th>
+                                <th>有告警</th>
+                                <th>告警数量</th>
+                                <th>最后更新</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cell in cells %}
+                            <tr>
+                                <td><code>{{ cell.cgi }}</code></td>
+                                <td>{{ cell.celname }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'primary' if cell.network_type == '4g' else 'success' }}">
+                                        {{ cell.network_type|upper }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if cell.has_performance %}
+                                    <span class="badge bg-success">是</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">否</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ "%.4f"|format(cell.traffic_gb) }}</td>
+                                <td>
+                                    {% if cell.has_alarm %}
+                                    <span class="badge bg-danger">是</span>
+                                    {% else %}
+                                    <span class="badge bg-success">否</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if cell.alarm_count > 0 %}
+                                    <span class="badge bg-danger">{{ cell.alarm_count }}</span>
+                                    {% else %}
+                                    0
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if cell.last_update %}
+                                    {{ cell.last_update.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                    <span class="text-muted">无数据</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if cell.has_alarm and cell.alarms %}
+                            <tr class="table-warning">
+                                <td colspan="8">
+                                    <small>
+                                        <strong>告警详情:</strong>
+                                        {% for alarm in cell.alarms %}
+                                        <span class="badge bg-warning text-dark me-1">
+                                            {{ alarm.alarm_name }} ({{ alarm.severity }})
+                                        </span>
+                                        {% endfor %}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 健康小区列表 -->
+    {% if healthy_cells_count > 0 %}
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-check-circle"></i> 健康小区列表（{{ healthy_cells_count }}个）</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive table-fixed-header">
+                <table class="table table-sm table-hover">
+                    <thead class="table-light sticky-header">
+                        <tr>
+                            <th>小区CGI</th>
+                            <th>小区名称</th>
+                            <th>制式</th>
+                            <th>流量(GB)</th>
+                            <th>最后更新</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cell in healthy_cells %}
+                        <tr>
+                            <td><code>{{ cell.cgi }}</code></td>
+                            <td>{{ cell.celname }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'primary' if cell.network_type == '4g' else 'success' }}">
+                                    {{ cell.network_type|upper }}
+                                </span>
+                            </td>
+                            <td>{{ "%.4f"|format(cell.traffic_gb) }}</td>
+                            <td>{{ cell.last_update.strftime('%Y-%m-%d %H:%M') if cell.last_update else '无数据' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* 固定表头样式 */
+.table-fixed-header {
+    max-height: 600px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8f9fa !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sticky-header th {
+    background-color: #f8f9fa !important;
+    border-bottom: 2px solid #dee2e6;
+}
+
+code {
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

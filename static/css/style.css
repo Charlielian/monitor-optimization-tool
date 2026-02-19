@@ -1,0 +1,1195 @@
+/* 全局样式 - 中国移动风格 */
+:root {
+  --primary-color: #0071CE;
+  --primary-dark: #005AA0;
+  --primary-light: #E6F2FF;
+  --secondary-color: #00A0E9;
+  --success-color: #52C41A;
+  --warning-color: #FAAD14;
+  --danger-color: #F5222D;
+  --text-primary: #262626;
+  --text-secondary: #595959;
+  --text-disabled: #BFBFBF;
+  --border-color: #E8E8E8;
+  --bg-color: #FFFFFF;
+  --bg-gray: #F5F5F5;
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --card-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.18);
+  --border-radius: 8px;
+  --border-radius-lg: 12px;
+  --transition: all 0.3s ease;
+  --transition-fast: all 0.2s ease;
+  --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  --gradient-secondary: linear-gradient(135deg, var(--secondary-color) 0%, #0086C9 100%);
+  --gradient-success: linear-gradient(135deg, var(--success-color) 0%, #389E0D 100%);
+  --gradient-warning: linear-gradient(135deg, var(--warning-color) 0%, #D48806 100%);
+  --gradient-danger: linear-gradient(135deg, var(--danger-color) 0%, #CF1322 100%);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+body {
+  background: #FFFFFF;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: var(--text-primary);
+}
+
+/* 导航栏样式 - 中国移动风格 */
+.navbar {
+  transition: var(--transition);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.navbar-dark.bg-gradient-primary {
+  background: var(--primary-color) !important;
+}
+
+.navbar-brand {
+  font-size: 1.25rem;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.nav-link {
+  transition: var(--transition);
+  border-radius: var(--border-radius);
+  padding: 0.5rem 1rem !important;
+  margin: 0 0.25rem;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white !important;
+}
+
+.nav-link.active {
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: var(--border-radius);
+  color: white !important;
+}
+
+/* 卡片样式 - 中国移动风格 */
+.card {
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+  background-color: white;
+  overflow: hidden;
+  position: relative;
+}
+
+.card:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-bottom: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.card-body {
+  padding: 1.5rem;
+  transition: var(--transition);
+}
+
+/* 渐变卡片样式 */
+.card-gradient {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-md);
+}
+
+.card-gradient-secondary {
+  background: var(--gradient-secondary);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-md);
+}
+
+.card-gradient-success {
+  background: var(--gradient-success);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-md);
+}
+
+.card-gradient-warning {
+  background: var(--gradient-warning);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-md);
+}
+
+.card-gradient-danger {
+  background: var(--gradient-danger);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-md);
+}
+
+/* 卡片标题样式增强 */
+.card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title i {
+  color: var(--primary-color);
+  font-size: 1.25rem;
+}
+
+/* 卡片阴影变体 */
+.card-shadow-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+.card-shadow-md {
+  box-shadow: var(--shadow-md);
+}
+
+.card-shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+/* 卡片边框变体 */
+.card-border-primary {
+  border-left: 4px solid var(--primary-color);
+}
+
+.card-border-success {
+  border-left: 4px solid var(--success-color);
+}
+
+.card-border-warning {
+  border-left: 4px solid var(--warning-color);
+}
+
+.card-border-danger {
+  border-left: 4px solid var(--danger-color);
+}
+
+/* 卡片悬浮效果增强 */
+.card-hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* 卡片背景图案 */
+.card-pattern {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-pattern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: rgba(0, 113, 206, 0.05);
+  border-radius: 50%;
+  transform: translate(40%, -40%);
+  z-index: 0;
+}
+
+.card-pattern .card-body {
+  position: relative;
+  z-index: 1;
+}
+
+/* 图表容器样式 */
+.chart-container {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* 响应式图表容器 */
+@media (max-width: 768px) {
+  .chart-container {
+    min-height: 300px !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .chart-container {
+    min-height: 350px !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .chart-container {
+    min-height: 400px !important;
+  }
+}
+
+/* 表格样式 - 中国移动风格 */
+.table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  background: white;
+  width: 100%;
+  table-layout: auto;
+  box-shadow: none;
+  border: 1px solid var(--border-color);
+}
+
+/* 固定表头表格容器 */
+.table-container {
+  width: 100%;
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  position: relative;
+}
+
+/* 自定义滚动条样式 */
+.table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: var(--bg-gray);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: var(--text-disabled);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* 核心：表头固定（sticky） */
+.table-container .table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  background: var(--bg-gray) !important;
+  background-color: var(--bg-gray) !important;
+  z-index: 10 !important;
+  padding: 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+/* 确保 table-light 类不影响固定表头 */
+.table-container .table thead.table-light th,
+.table-container .table.table-light thead th {
+  position: sticky !important;
+  top: 0 !important;
+  background: var(--bg-gray) !important;
+  background-color: var(--bg-gray) !important;
+  z-index: 10 !important;
+}
+
+.table-container .table thead th:last-child {
+  border-right: none;
+}
+
+/* 单元格基础样式 */
+.table-container .table th,
+.table-container .table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+.table-container .table td:last-child,
+.table-container .table th:last-child {
+  border-right: none;
+}
+
+.table tbody td {
+  padding: 0.75rem;
+  border-top: 1px solid var(--border-color);
+  transition: var(--transition);
+  color: var(--text-primary);
+}
+
+.table tbody tr {
+  transition: var(--transition);
+  position: relative;
+}
+
+.table tbody tr:hover {
+  background-color: var(--primary-light);
+  transform: translateX(2px);
+}
+
+.table tbody tr:active {
+  transform: translateX(0);
+}
+
+/* 表格单元格悬停效果 */
+.table tbody td {
+  transition: var(--transition);
+}
+
+.table tbody tr:hover td {
+  color: var(--primary-color);
+}
+
+/* 兼容Bootstrap的table-responsive类 */
+.table-responsive {
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+/* 当table-responsive需要固定表头时 */
+.table-responsive.table-container {
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: auto;
+  transition: var(--transition);
+}
+
+/* 表单控件增强交互效果 */
+.form-control, .form-select {
+  border-radius: var(--border-radius);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+  background: white;
+  color: var(--text-primary);
+  position: relative;
+  z-index: 1;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 113, 206, 0.1);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.form-control:hover, .form-select:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 1px rgba(0, 113, 206, 0.1);
+}
+
+/* 输入框焦点动画 */
+.form-control::placeholder {
+  transition: var(--transition);
+  color: var(--text-disabled);
+}
+
+.form-control:focus::placeholder {
+  transform: translateY(-100%);
+  font-size: 0.75rem;
+  color: var(--primary-color);
+}
+
+/* 选择器增强 */
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.5rem;
+}
+
+.form-select:focus {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%230071CE' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+
+/* 复选框和单选按钮增强 */
+.form-check-input {
+  border-radius: 2px;
+  transition: var(--transition);
+  border: 1px solid var(--border-color);
+  width: 16px;
+  height: 16px;
+  position: relative;
+  cursor: pointer;
+}
+
+.form-check-input:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: none;
+  animation: checkmark 0.3s ease-in-out;
+}
+
+@keyframes checkmark {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 开关控件增强 */
+.form-switch .form-check-input {
+  border-radius: 10px;
+  width: 40px;
+  height: 20px;
+  background-color: var(--text-disabled);
+  transition: var(--transition);
+  border: none;
+  position: relative;
+  cursor: pointer;
+}
+
+.form-switch .form-check-input:checked {
+  background-color: var(--primary-color);
+  transform: translateX(20px);
+}
+
+.form-switch .form-check-input::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  transition: var(--transition);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translateX(20px);
+}
+
+/* 旧版兼容：sticky-table-container 别名 */
+.sticky-table-container {
+  width: 100%;
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  position: relative;
+}
+
+.sticky-table-container .table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.sticky-table-container .table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  background: var(--bg-gray) !important;
+  background-color: var(--bg-gray) !important;
+  z-index: 10 !important;
+  padding: 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+/* 确保 table-light 类不影响固定表头 */
+.sticky-table-container .table thead.table-light th,
+.sticky-table-container .table.table-light thead th {
+  position: sticky !important;
+  top: 0 !important;
+  background: var(--bg-gray) !important;
+  background-color: var(--bg-gray) !important;
+  z-index: 10 !important;
+}
+
+.sticky-table-container .table thead th:last-child {
+  border-right: none;
+}
+
+/* 按钮样式 - 中国移动风格 */
+.btn {
+  border-radius: var(--border-radius);
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: var(--transition);
+  border: 1px solid transparent;
+  box-shadow: none;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 113, 206, 0.2);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 113, 206, 0.2);
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 113, 206, 0.2);
+}
+
+/* 按钮点击波纹效果 */
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+  z-index: -1;
+}
+
+.btn:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* 按钮加载状态 */
+.btn-loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.btn-loading::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.btn-loading.btn-outline-primary::before {
+  border-color: rgba(0, 113, 206, 0.3);
+  border-top-color: var(--primary-color);
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  color: white;
+}
+
+.btn-success {
+  background: var(--success-color);
+  border-color: var(--success-color);
+  color: white;
+}
+
+.btn-success:hover {
+  background: #389E0D;
+  border-color: #389E0D;
+  color: white;
+}
+
+.btn-warning {
+  background: var(--warning-color);
+  border-color: var(--warning-color);
+  color: white;
+}
+
+.btn-warning:hover {
+  background: #D48806;
+  border-color: #D48806;
+  color: white;
+}
+
+.btn-danger {
+  background: var(--danger-color);
+  border-color: var(--danger-color);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #CF1322;
+  border-color: #CF1322;
+  color: white;
+}
+
+.btn-outline-primary {
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  background: white;
+}
+
+.btn-outline-primary:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.btn-outline-success {
+  border: 1px solid var(--success-color);
+  color: var(--success-color);
+  background: white;
+}
+
+.btn-outline-success:hover {
+  background: var(--success-color);
+  color: white;
+  border-color: var(--success-color);
+}
+
+.btn-outline-warning {
+  border: 1px solid var(--warning-color);
+  color: var(--warning-color);
+  background: white;
+}
+
+.btn-outline-warning:hover {
+  background: var(--warning-color);
+  color: white;
+  border-color: var(--warning-color);
+}
+
+.btn-outline-danger {
+  border: 1px solid var(--danger-color);
+  color: var(--danger-color);
+  background: white;
+}
+
+.btn-outline-danger:hover {
+  background: var(--danger-color);
+  color: white;
+  border-color: var(--danger-color);
+}
+
+.btn-outline-info {
+  border: 1px solid var(--secondary-color);
+  color: var(--secondary-color);
+  background: white;
+}
+
+.btn-outline-info:hover {
+  background: var(--secondary-color);
+  color: white;
+  border-color: var(--secondary-color);
+}
+
+.btn-sm {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: var(--border-radius);
+}
+
+.btn-light {
+  background: white;
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-light:hover {
+  background: var(--bg-gray);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* 表单控件样式 - 中国移动风格 */
+.form-control, .form-select {
+  border-radius: var(--border-radius);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+  background: white;
+  color: var(--text-primary);
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 113, 206, 0.1);
+  outline: none;
+}
+
+.form-control-sm, .form-select-sm {
+  border-radius: var(--border-radius);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* 标签样式 - 中国移动风格 */
+.form-label {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+/* 卡片标题样式 */
+.card-header h5, .card-header h6 {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* 徽章样式 - 中国移动风格 */
+.badge {
+  border-radius: 2px;
+  padding: 0.25rem 0.5rem;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.badge.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+.badge.bg-success {
+  background-color: var(--success-color) !important;
+}
+
+.badge.bg-warning {
+  background-color: var(--warning-color) !important;
+}
+
+.badge.bg-danger {
+  background-color: var(--danger-color) !important;
+}
+
+.badge.bg-info {
+  background-color: var(--secondary-color) !important;
+}
+
+/* 警报样式 - 中国移动风格 */
+.alert {
+  border-radius: var(--border-radius);
+  border: 1px solid transparent;
+  box-shadow: none;
+  padding: 1rem 1.25rem;
+}
+
+.alert-info {
+  background-color: var(--primary-light);
+  border-color: var(--primary-color);
+  color: var(--primary-dark);
+}
+
+.alert-success {
+  background-color: #F6FFED;
+  border-color: var(--success-color);
+  color: #389E0D;
+}
+
+.alert-warning {
+  background-color: #FFFBE6;
+  border-color: var(--warning-color);
+  color: #D48806;
+}
+
+.alert-danger {
+  background-color: #FFF1F0;
+  border-color: var(--danger-color);
+  color: #CF1322);
+}
+
+/* 页脚样式 - 中国移动风格 */
+.footer {
+  background: white;
+  border-top: 1px solid var(--border-color);
+  margin-top: auto;
+}
+
+/* 响应式工具提示 */
+@media (max-width: 576px) {
+  .card-header .d-flex {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
+  
+  .card-header form {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+  
+  .card-header form .d-flex {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .nav-link {
+    padding: 0.5rem 0.75rem !important;
+    margin: 0.125rem 0;
+  }
+  
+  .navbar-nav {
+    gap: 0.25rem;
+  }
+}
+
+/* 加载状态 */
+.loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 自定义滚动条 - 中国移动风格 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-gray);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-disabled);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* 渐变背景卡片 - 移除渐变，使用纯色 */
+.card-gradient-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.card-gradient-secondary {
+  background: var(--secondary-color);
+  color: white;
+}
+
+.card-gradient-success {
+  background: var(--success-color);
+  color: white;
+}
+
+.card-gradient-warning {
+  background: var(--warning-color);
+  color: white;
+}
+
+.card-gradient-danger {
+  background: var(--danger-color);
+  color: white;
+}
+
+/* 阴影效果 - 中国移动风格 */
+.shadow-sm {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+.shadow {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.shadow-lg {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* 间距工具类 */
+.mt-5 {
+  margin-top: 2rem !important;
+}
+
+.mb-5 {
+  margin-bottom: 2rem !important;
+}
+
+.mt-auto {
+  margin-top: auto !important;
+}
+
+/* 网格间距 */
+.g-3 {
+  gap: 1rem !important;
+}
+
+/* 卡片头部样式 */
+.card-header.bg-white {
+  background: white !important;
+}
+
+/* 卡片底部样式 - 中国移动风格 */
+.card-footer {
+  background: var(--bg-gray);
+  border-top: 1px solid var(--border-color);
+  border-radius: 0 0 var(--border-radius) var(--border-radius) !important;
+  padding: 0.75rem 1.5rem;
+}
+
+/* 表单组样式 */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+/* 输入组样式 - 中国移动风格 */
+.input-group {
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.input-group .form-control {
+  border: 1px solid var(--border-color);
+  box-shadow: none;
+}
+
+.input-group .btn {
+  border: 1px solid var(--border-color);
+  box-shadow: none;
+}
+
+.input-group-text {
+  background: var(--bg-gray);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+/* 选择器样式 - 中国移动风格 */
+select[multiple] {
+  border-radius: var(--border-radius);
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  background: white;
+  box-shadow: none;
+}
+
+/* 复选框和单选按钮样式 - 中国移动风格 */
+.form-check-input {
+  border-radius: 2px;
+  transition: var(--transition);
+  border: 1px solid var(--border-color);
+}
+
+.form-check-input:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: none;
+}
+
+.form-check-label {
+  transition: var(--transition);
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.form-check-label:hover {
+  color: var(--primary-color);
+}
+
+/* 开关样式 - 中国移动风格 */
+.form-switch .form-check-input {
+  border-radius: 10px;
+  width: 40px;
+  height: 20px;
+  background-color: var(--text-disabled);
+  transition: var(--transition);
+  border: none;
+}
+
+.form-switch .form-check-input:checked {
+  background-color: var(--primary-color);
+}
+
+/* 文本样式 - 中国移动风格 */
+.text-muted {
+  color: var(--text-secondary) !important;
+}
+
+.text-primary {
+  color: var(--primary-color) !important;
+}
+
+.text-success {
+  color: var(--success-color) !important;
+}
+
+.text-warning {
+  color: var(--warning-color) !important;
+}
+
+.text-danger {
+  color: var(--danger-color) !important;
+}
+
+.text-info {
+  color: var(--secondary-color) !important;
+}
+
+/* 标题样式 - 中国移动风格 */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+/* 响应式设计 */
+@media (min-width: 1200px) {
+  .container-fluid {
+    max-width: 100% !important;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .container-fluid {
+    padding: 0 1rem;
+  }
+  
+  .card {
+    margin-bottom: 1rem;
+  }
+  
+  .row {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .col-lg-6, .col-lg-8, .col-lg-4 {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* 卡片标题图标 */
+.card-header i {
+  margin-right: 0.5rem;
+}
+
+/* 数据展示卡片 - 中国移动风格 */
+.data-card {
+  text-align: center;
+  padding: 2rem;
+}
+
+.data-card .data-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--primary-color);
+}
+
+.data-card .data-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* 背景色辅助类 - 中国移动风格 */
+.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+.bg-success {
+  background-color: var(--success-color) !important;
+}
+
+.bg-warning {
+  background-color: var(--warning-color) !important;
+}
+
+.bg-danger {
+  background-color: var(--danger-color) !important;
+}
+
+.bg-info {
+  background-color: var(--secondary-color) !important;
+}
+
+.bg-light {
+  background-color: var(--bg-gray) !important;
+}
+
+/* 边框色辅助类 */
+.border-primary {
+  border-color: var(--primary-color) !important;
+}
+
+.border-success {
+  border-color: var(--success-color) !important;
+}
+
+.border-warning {
+  border-color: var(--warning-color) !important;
+}
+
+.border-danger {
+  border-color: var(--danger-color) !important;
+}
+
+.border-info {
+  border-color: var(--secondary-color) !important;
+}

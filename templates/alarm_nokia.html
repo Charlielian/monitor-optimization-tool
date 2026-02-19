@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- 页面标题 -->
+<div class="card shadow mb-4">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center" style="border-left: 4px solid var(--primary-color);">
+    <div class="d-flex align-items-center">
+      <i class="bi bi-exclamation-triangle me-2 fs-4 text-warning"></i>
+      <h5 class="mb-0 fw-bold">告警监控查询（诺基亚设备）</h5>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      {% if stats.latest_alarm_time %}
+      <div class="text-muted small">
+        <i class="bi bi-clock-history me-1"></i>
+        <span>最新告警: {{ stats.latest_alarm_time.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+      </div>
+      {% endif %}
+      <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
+        <i class="bi bi-arrow-clockwise me-1"></i>刷新
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 告警统计卡片 -->
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-1">当前告警总数</h6>
+            <h3 class="mb-0 fw-bold text-primary">{{ stats.current_total }}</h3>
+          </div>
+          <div class="bg-primary bg-opacity-10 p-3 rounded">
+            <i class="bi bi-bell-fill fs-2 text-primary"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-1">紧急告警</h6>
+            <h3 class="mb-0 fw-bold text-danger">{{ stats.current_urgent }}</h3>
+          </div>
+          <div class="bg-danger bg-opacity-10 p-3 rounded">
+            <i class="bi bi-exclamation-circle-fill fs-2 text-danger"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-1">重要/主要告警</h6>
+            <h3 class="mb-0 fw-bold text-warning">{{ (stats.current_important or 0) + (stats.current_major or 0) }}</h3>
+          </div>
+          <div class="bg-warning bg-opacity-10 p-3 rounded">
+            <i class="bi bi-exclamation-triangle-fill fs-2 text-warning"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-1">今日告警总数</h6>
+            <h3 class="mb-0 fw-bold text-info">{{ stats.today_total }}</h3>
+          </div>
+          <div class="bg-info bg-opacity-10 p-3 rounded">
+            <i class="bi bi-calendar-check-fill fs-2 text-info"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab导航 -->
+<ul class="nav nav-tabs mb-3" id="alarmTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link {% if active_tab == 'current' %}active{% endif %}" id="current-tab" data-bs-toggle="tab" data-bs-target="#current" type="button" role="tab">
+      <i class="bi bi-bell-fill me-2"></i>当前告警
+      <span class="badge bg-danger ms-1">实时</span>
+      {% if stats.current_total > 0 %}
+      <span class="badge bg-danger ms-1">{{ stats.current_total }}</span>
+      {% endif %}
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link {% if active_tab == 'historical' %}active{% endif %}" id="historical-tab" data-bs-toggle="tab" data-bs-target="#historical" type="button" role="tab">
+      <i class="bi bi-archive-fill me-2"></i>历史告警
+      <span class="badge bg-secondary ms-1">归档</span>
+    </button>
+  </li>
+</ul>
+
+<!-- Tab内容 -->
+<div class="tab-content" id="alarmTabContent">
+  <!-- 当前告警 -->
+  <div class="tab-pane fade {% if active_tab == 'current' %}show active{% endif %}" id="current" role="tabpanel">
+    <!-- 当前告警说明 -->
+    <div class="alert alert-warning border-start border-warning border-4 mb-3" role="alert">
+      <div class="d-flex align-items-center">
+        <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+        <div>
+          <strong>当前告警</strong>：显示最近1小时内的实时告警，数据实时更新，未经去重处理。
+        </div>
+      </div>
+    </div>
+
+    <!-- 当前告警过滤框 -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white">
+        <h6 class="mb-0 fw-bold">
+          <i class="bi bi-funnel text-primary me-2"></i>过滤条件
+        </h6>
+      </div>
+      <div class="card-body">
+        <form method="get" action="{{ url_for('alarm.alarm_nokia') }}" class="row g-3">
+          <input type="hidden" name="tab" value="current">
+          <div class="col-md-4">
+            <label class="form-label">网元ID / 站点名称</label>
+            <input type="text" class="form-control" name="current_ne_id" value="{{ current_ne_id_filter }}" placeholder="网元ID、站点名称或组合">
+            <small class="form-text text-muted">支持：①网元ID ②站点名称 ③ID+站点(空格) ④多个(逗号)</small>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">告警名称</label>
+            <input type="text" class="form-control" name="current_alarm_name" value="{{ current_alarm_name_filter }}" placeholder="输入告警名称进行过滤">
+          </div>
+          <div class="col-md-4 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary me-2">
+              <i class="bi bi-search me-1"></i>过滤
+            </button>
+            <a href="{{ url_for('alarm.alarm_nokia', tab='current') }}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-clockwise me-1"></i>重置
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div class="card shadow-sm">
+      <div class="card-header bg-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 fw-bold">
+            <i class="bi bi-bell text-warning me-2"></i>当前告警列表
+            <span class="badge bg-danger ms-2">实时</span>
+            <span class="text-muted small ms-2">(最近1小时)</span>
+          </h6>
+          <button class="btn btn-sm btn-success" onclick="exportCurrentAlarms()">
+            <i class="bi bi-file-earmark-excel me-1"></i>导出Excel
+          </button>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        {% if current_alarms %}
+        <div class="table-responsive">
+          <table class="table table-hover table-striped mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>告警时间</th>
+                <th>告警级别</th>
+                <th>告警名称</th>
+                <th>告警类型</th>
+                <th>网元</th>
+                <th>网元名称</th>
+                <th>网元ID</th>
+                <th>网元类型</th>
+                <th>站点名称</th>
+                <th>告警对象</th>
+                <th>位置</th>
+                <th>附加信息</th>
+                <th>确认状态</th>
+                <th>告警原因</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for alarm in current_alarms %}
+              <tr>
+                <td class="text-nowrap">{{ alarm.occur_time or '-' }}</td>
+                <td>
+                  {% if alarm.alarm_level == '紧急' %}
+                  <span class="badge bg-danger">{{ alarm.alarm_level }}</span>
+                  {% elif alarm.alarm_level == '重要' or alarm.alarm_level == '主要' %}
+                  <span class="badge bg-warning text-dark">{{ alarm.alarm_level }}</span>
+                  {% else %}
+                  <span class="badge bg-info">{{ alarm.alarm_level or '一般' }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ alarm.alarm_code_name or '-' }}</td>
+                <td>{{ alarm.alarm_type or '-' }}</td>
+                <td>{{ alarm['网元'] or '-' }}</td>
+                <td>{{ alarm.ne_name or alarm.site_name or '-' }}</td>
+                <td>{{ alarm.ne_id or '-' }}</td>
+                <td>
+                  {% if alarm.ne_type == 'ITBBU' %}
+                  <span class="badge bg-success">{{ alarm.ne_type }}</span>
+                  {% else %}
+                  <span class="badge bg-secondary">{{ alarm.ne_type or '-' }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ alarm.site_name or '-' }}</td>
+                <td class="text-truncate" style="max-width: 150px;" title="{{ alarm.alarm_object_name or '-' }}">
+                  {{ alarm.alarm_object_name or '-' }}
+                </td>
+                <td class="text-truncate" style="max-width: 150px;" title="{{ alarm.location or '-' }}">
+                  {{ alarm.location or '-' }}
+                </td>
+                <td class="text-truncate" style="max-width: 150px;" title="{{ alarm.additional_info or '-' }}">
+                  {{ alarm.additional_info or '-' }}
+                </td>
+                <td>
+                  {% if alarm.ack_status == '未确认' %}
+                  <span class="badge bg-danger">{{ alarm.ack_status }}</span>
+                  {% elif alarm.ack_status == '已确认' %}
+                  <span class="badge bg-success">{{ alarm.ack_status }}</span>
+                  {% else %}
+                  <span class="badge bg-secondary">{{ alarm.ack_status or '-' }}</span>
+                  {% endif %}
+                </td>
+                <td class="text-truncate" style="max-width: 200px;" title="{{ alarm.alarm_reason or '-' }}">
+                  {{ alarm.alarm_reason or '-' }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+          <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+          <p class="text-muted mt-3">暂无当前告警</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- 历史告警 -->
+  <div class="tab-pane fade {% if active_tab == 'historical' %}show active{% endif %}" id="historical" role="tabpanel">
+    <!-- 历史告警说明 -->
+    <div class="alert alert-info border-start border-info border-4 mb-3" role="alert">
+      <div class="d-flex align-items-center">
+        <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+        <div>
+          <strong>历史告警</strong>：显示指定时间范围内的告警归档数据，已按告警特征去重，默认查询最近7天。
+        </div>
+      </div>
+    </div>
+    
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white">
+        <h6 class="mb-0 fw-bold">
+          <i class="bi bi-funnel text-primary me-2"></i>查询条件
+        </h6>
+      </div>
+      <div class="card-body">
+        <form method="get" action="{{ url_for('alarm.alarm_nokia') }}" class="row g-3">
+          <input type="hidden" name="tab" value="historical">
+          <div class="col-md-3">
+            <label class="form-label">开始时间</label>
+            <input type="datetime-local" class="form-control" name="start_time" value="{{ start_time }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">结束时间</label>
+            <input type="datetime-local" class="form-control" name="end_time" value="{{ end_time }}">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">网元ID / 站点名称</label>
+            <input type="text" class="form-control" name="hist_ne_id" value="{{ hist_ne_id_filter }}" placeholder="ID/站点/组合">
+            <small class="form-text text-muted">智能识别</small>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">告警名称</label>
+            <input type="text" class="form-control" name="hist_alarm_name" value="{{ hist_alarm_name_filter }}" placeholder="告警名称">
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100 mb-2">
+              <i class="bi bi-search me-1"></i>查询
+            </button>
+            <a href="{{ url_for('alarm.alarm_nokia', tab='historical') }}" class="btn btn-outline-secondary w-100">
+              <i class="bi bi-arrow-clockwise me-1"></i>重置
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-header bg-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 fw-bold">
+            <i class="bi bi-clock-history text-info me-2"></i>历史告警列表
+            <span class="badge bg-info ms-2">归档</span>
+            <span class="text-muted small ms-2">(已去重，默认查询最近7天)</span>
+          </h6>
+          <div class="d-flex gap-2">
+            <span class="badge bg-secondary">共 {{ historical_data.total }} 条</span>
+            <button class="btn btn-sm btn-success" onclick="exportHistoricalAlarms()">
+              <i class="bi bi-file-earmark-excel me-1"></i>导出Excel
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        {% if historical_data.alarms %}
+        <div class="table-responsive">
+          <table class="table table-hover table-striped mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>告警时间</th>
+                <th>告警级别</th>
+                <th>告警名称</th>
+                <th>告警类型</th>
+                <th>网元</th>
+                <th>网元名称</th>
+                <th>网元ID</th>
+                <th>网元类型</th>
+                <th>站点名称</th>
+                <th>告警对象</th>
+                <th>位置</th>
+                <th>附加信息</th>
+                <th>确认状态</th>
+                <th>告警原因</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for alarm in historical_data.alarms %}
+              <tr>
+                <td class="text-nowrap">{{ alarm.occur_time or '-' }}</td>
+                <td>
+                  {% if alarm.alarm_level == '紧急' %}
+                  <span class="badge bg-danger">{{ alarm.alarm_level }}</span>
+                  {% elif alarm.alarm_level == '重要' or alarm.alarm_level == '主要' %}
+                  <span class="badge bg-warning text-dark">{{ alarm.alarm_level }}</span>
+                  {% else %}
+                  <span class="badge bg-info">{{ alarm.alarm_level or '一般' }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ alarm.alarm_code_name or '-' }}</td>
+                <td>{{ alarm.alarm_type or '-' }}</td>
+                <td>{{ alarm['网元'] or '-' }}</td>
+                <td>{{ alarm.ne_name or alarm.site_name or '-' }}</td>
+                <td>{{ alarm.ne_id or '-' }}</td>
+                <td>
+                  {% if alarm.ne_type == 'ITBBU' %}
+                  <span class="badge bg-success">{{ alarm.ne_type }}</span>
+                  {% else %}
+                  <span class="badge bg-secondary">{{ alarm.ne_type or '-' }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ alarm.site_name or '-' }}</td>
+                <td class="text-truncate" style="max-width: 150px;" title="{{ alarm.alarm_object_name or '-' }}">
+                  {{ alarm.alarm_object_name or '-' }}
+                </td>
+                <td class="text-truncate" style="max-width: 150px;" title="{{ alarm.location or '-' }}">
+                  {{ alarm.location or '-' }}
+                </td>
+                <td class="text-truncate" style="max-width: 150px;" title="{{ alarm.additional_info or '-' }}">
+                  {{ alarm.additional_info or '-' }}
+                </td>
+                <td>
+                  {% if alarm.ack_status == '未确认' %}
+                  <span class="badge bg-danger">{{ alarm.ack_status }}</span>
+                  {% elif alarm.ack_status == '已确认' %}
+                  <span class="badge bg-success">{{ alarm.ack_status }}</span>
+                  {% else %}
+                  <span class="badge bg-secondary">{{ alarm.ack_status or '-' }}</span>
+                  {% endif %}
+                </td>
+                <td class="text-truncate" style="max-width: 200px;" title="{{ alarm.alarm_reason or '-' }}">
+                  {{ alarm.alarm_reason or '-' }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 分页 -->
+        {% if historical_data.total_pages > 1 %}
+        <div class="card-footer bg-white">
+          <nav>
+            <ul class="pagination pagination-sm mb-0 justify-content-center">
+              <li class="page-item {% if historical_data.page <= 1 %}disabled{% endif %}">
+                <a class="page-link" href="?tab=historical&page={{ historical_data.page - 1 }}&start_time={{ start_time }}&end_time={{ end_time }}&hist_ne_id={{ hist_ne_id_filter }}&hist_alarm_name={{ hist_alarm_name_filter }}">上一页</a>
+              </li>
+              {% for p in range(1, historical_data.total_pages + 1) %}
+                {% if p == historical_data.page %}
+                <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                {% elif p <= 3 or p > historical_data.total_pages - 3 or (p >= historical_data.page - 2 and p <= historical_data.page + 2) %}
+                <li class="page-item"><a class="page-link" href="?tab=historical&page={{ p }}&start_time={{ start_time }}&end_time={{ end_time }}&hist_ne_id={{ hist_ne_id_filter }}&hist_alarm_name={{ hist_alarm_name_filter }}">{{ p }}</a></li>
+                {% elif p == 4 or p == historical_data.total_pages - 3 %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+              {% endfor %}
+              <li class="page-item {% if historical_data.page >= historical_data.total_pages %}disabled{% endif %}">
+                <a class="page-link" href="?tab=historical&page={{ historical_data.page + 1 }}&start_time={{ start_time }}&end_time={{ end_time }}&hist_ne_id={{ hist_ne_id_filter }}&hist_alarm_name={{ hist_alarm_name_filter }}">下一页</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-5">
+          <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+          <p class="text-muted mt-3">暂无历史告警数据</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 导出当前告警（带过滤参数）- 诺基亚设备
+function exportCurrentAlarms() {
+  const params = new URLSearchParams({
+    current_ne_id: "{{ current_ne_id_filter }}",
+    current_alarm_name: "{{ current_alarm_name_filter }}"
+  });
+  window.location.href = "{{ url_for('alarm.export_current_alarms_nokia') }}?" + params.toString();
+}
+
+// 导出历史告警（带过滤参数）- 诺基亚设备
+function exportHistoricalAlarms() {
+  const params = new URLSearchParams({
+    start_time: "{{ start_time }}",
+    end_time: "{{ end_time }}",
+    hist_ne_id: "{{ hist_ne_id_filter }}",
+    hist_alarm_name: "{{ hist_alarm_name_filter }}"
+  });
+  window.location.href = "{{ url_for('alarm.export_historical_alarms_nokia') }}?" + params.toString();
+}
+
+// 保持tab状态
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const tab = urlParams.get('tab');
+  if (tab === 'historical') {
+    const historicalTab = document.getElementById('historical-tab');
+    if (historicalTab) {
+      const bsTab = new bootstrap.Tab(historicalTab);
+      bsTab.show();
+    }
+  }
+});
+</script>
+
+{% endblock %}
