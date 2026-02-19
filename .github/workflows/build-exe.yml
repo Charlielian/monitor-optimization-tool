@@ -25,17 +25,19 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
-          pip install -r requirements.txt
+          pip install -r SignalTestApp_Python_Clean/requirements.txt
           pip install pyyaml
       
       - name: Build with PyInstaller
-        run: pyinstaller monitor_optimization_tool.spec
+        run: |
+          cd SignalTestApp_Python_Clean
+          pyinstaller monitor_optimization_tool.spec
       
       - name: Create release directory
         run: mkdir -p release
       
       - name: Copy built files to release
-        run: xcopy "dist\monitor_optimization_tool" "release\" /E /I
+        run: xcopy "SignalTestApp_Python_Clean\dist\monitor_optimization_tool" "release\" /E /I
       
       - name: Create version file
         shell: powershell
