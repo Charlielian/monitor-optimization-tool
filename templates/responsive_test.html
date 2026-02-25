@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="mb-3">
+        <i class="bi bi-phone me-2"></i>响应式设计测试页面
+      </h2>
+      <p class="text-muted">此页面用于测试不同屏幕尺寸下的显示效果</p>
+    </div>
+  </div>
+
+  <!-- 当前屏幕信息 -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-display me-2"></i>当前屏幕信息
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <div class="card border-primary">
+                <div class="card-body text-center">
+                  <i class="bi bi-arrows-angle-expand text-primary fs-1 mb-2"></i>
+                  <h4 class="mb-1" id="screenWidth">-</h4>
+                  <p class="text-muted mb-0">屏幕宽度</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card border-success">
+                <div class="card-body text-center">
+                  <i class="bi bi-arrows-vertical text-success fs-1 mb-2"></i>
+                  <h4 class="mb-1" id="screenHeight">-</h4>
+                  <p class="text-muted mb-0">屏幕高度</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card border-info">
+                <div class="card-body text-center">
+                  <i class="bi bi-aspect-ratio text-info fs-1 mb-2"></i>
+                  <h4 class="mb-1" id="deviceType">-</h4>
+                  <p class="text-muted mb-0">设备类型</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card border-warning">
+                <div class="card-body text-center">
+                  <i class="bi bi-phone text-warning fs-1 mb-2"></i>
+                  <h4 class="mb-1" id="orientation">-</h4>
+                  <p class="text-muted mb-0">屏幕方向</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 响应式断点测试 -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">
+            <i class="bi bi-rulers me-2"></i>Bootstrap 响应式断点
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th>断点</th>
+                  <th>尺寸范围</th>
+                  <th>设备类型</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>xs</code></td>
+                  <td>&lt; 576px</td>
+                  <td>超小屏幕（手机竖屏）</td>
+                  <td><span class="badge bg-secondary d-block d-sm-none">✓ 当前</span></td>
+                </tr>
+                <tr>
+                  <td><code>sm</code></td>
+                  <td>≥ 576px</td>
+                  <td>小屏幕（手机横屏）</td>
+                  <td><span class="badge bg-secondary d-none d-sm-block d-md-none">✓ 当前</span></td>
+                </tr>
+                <tr>
+                  <td><code>md</code></td>
+                  <td>≥ 768px</td>
+                  <td>中等屏幕（平板）</td>
+                  <td><span class="badge bg-secondary d-none d-md-block d-lg-none">✓ 当前</span></td>
+                </tr>
+                <tr>
+                  <td><code>lg</code></td>
+                  <td>≥ 992px</td>
+                  <td>大屏幕（桌面）</td>
+                  <td><span class="badge bg-secondary d-none d-lg-block d-xl-none">✓ 当前</span></td>
+                </tr>
+                <tr>
+                  <td><code>xl</code></td>
+                  <td>≥ 1200px</td>
+                  <td>超大屏幕（大桌面）</td>
+                  <td><span class="badge bg-secondary d-none d-xl-block d-xxl-none">✓ 当前</span></td>
+                </tr>
+                <tr>
+                  <td><code>xxl</code></td>
+                  <td>≥ 1400px</td>
+                  <td>超超大屏幕</td>
+                  <td><span class="badge bg-secondary d-none d-xxl-block">✓ 当前</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 网格系统测试 -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">
+            <i class="bi bi-grid-3x3 me-2"></i>网格系统测试
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3 mb-3">
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+              <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                  <p class="mb-0">列 1</p>
+                  <small>12/6/4/3</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+              <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                  <p class="mb-0">列 2</p>
+                  <small>12/6/4/3</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+              <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                  <p class="mb-0">列 3</p>
+                  <small>12/6/4/3</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+              <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                  <p class="mb-0">列 4</p>
+                  <small>12/6/4/3</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="text-muted small mb-0">
+            <i class="bi bi-info-circle me-1"></i>
+            在不同屏幕尺寸下，列会自动调整布局：
+            超小屏(1列) → 小屏(2列) → 中屏(3列) → 大屏(4列)
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 表单测试 -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">
+            <i class="bi bi-input-cursor me-2"></i>表单响应式测试
+          </h5>
+        </div>
+        <div class="card-body">
+          <form>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">文本输入</label>
+                <input type="text" class="form-control" placeholder="输入文本">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">下拉选择</label>
+                <select class="form-select">
+                  <option>选项 1</option>
+                  <option>选项 2</option>
+                  <option>选项 3</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">日期</label>
+                <input type="date" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">时间</label>
+                <input type="time" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">数字</label>
+                <input type="number" class="form-control" placeholder="0">
+              </div>
+              <div class="col-12">
+                <div class="btn-group w-100" role="group">
+                  <button type="button" class="btn btn-primary">提交</button>
+                  <button type="button" class="btn btn-secondary">重置</button>
+                  <button type="button" class="btn btn-outline-danger">取消</button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 表格测试 -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">
+            <i class="bi bi-table me-2"></i>表格响应式测试
+          </h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>ID</th>
+                  <th>名称</th>
+                  <th class="d-none d-md-table-cell">描述</th>
+                  <th class="d-none d-lg-table-cell">创建时间</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>项目 A</td>
+                  <td class="d-none d-md-table-cell">这是项目 A 的描述</td>
+                  <td class="d-none d-lg-table-cell">2026-01-10</td>
+                  <td><span class="badge bg-success">正常</span></td>
+                  <td>
+                    <button class="btn btn-sm btn-primary">查看</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>项目 B</td>
+                  <td class="d-none d-md-table-cell">这是项目 B 的描述</td>
+                  <td class="d-none d-lg-table-cell">2026-01-09</td>
+                  <td><span class="badge bg-warning">警告</span></td>
+                  <td>
+                    <button class="btn btn-sm btn-primary">查看</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>项目 C</td>
+                  <td class="d-none d-md-table-cell">这是项目 C 的描述</td>
+                  <td class="d-none d-lg-table-cell">2026-01-08</td>
+                  <td><span class="badge bg-danger">错误</span></td>
+                  <td>
+                    <button class="btn btn-sm btn-primary">查看</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="text-muted small p-3 mb-0">
+            <i class="bi bi-info-circle me-1"></i>
+            在小屏幕上，部分列会自动隐藏以适应屏幕宽度
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 测试建议 -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm border-info">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-lightbulb me-2"></i>测试建议
+          </h5>
+        </div>
+        <div class="card-body">
+          <h6>如何测试响应式设计：</h6>
+          <ol>
+            <li><strong>浏览器开发者工具</strong>：按 F12 打开，点击设备工具栏图标（Ctrl+Shift+M）</li>
+            <li><strong>调整窗口大小</strong>：拖动浏览器窗口边缘，观察布局变化</li>
+            <li><strong>不同设备</strong>：在手机、平板、电脑上实际测试</li>
+            <li><strong>不同浏览器</strong>：Chrome、Firefox、Safari、Edge 等</li>
+            <li><strong>横竖屏切换</strong>：在移动设备上旋转屏幕测试</li>
+          </ol>
+          
+          <h6 class="mt-3">常见断点：</h6>
+          <ul>
+            <li><strong>手机竖屏</strong>：320px - 575px</li>
+            <li><strong>手机横屏/小平板</strong>：576px - 767px</li>
+            <li><strong>平板</strong>：768px - 991px</li>
+            <li><strong>桌面</strong>：992px - 1199px</li>
+            <li><strong>大桌面</strong>：1200px+</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 更新屏幕信息
+function updateScreenInfo() {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  
+  document.getElementById('screenWidth').textContent = width + 'px';
+  document.getElementById('screenHeight').textContent = height + 'px';
+  
+  // 判断设备类型
+  let deviceType = '';
+  if (width < 576) {
+    deviceType = '超小屏';
+  } else if (width < 768) {
+    deviceType = '小屏';
+  } else if (width < 992) {
+    deviceType = '中屏';
+  } else if (width < 1200) {
+    deviceType = '大屏';
+  } else if (width < 1400) {
+    deviceType = '超大屏';
+  } else {
+    deviceType = '超超大屏';
+  }
+  document.getElementById('deviceType').textContent = deviceType;
+  
+  // 判断屏幕方向
+  const orientation = width > height ? '横屏' : '竖屏';
+  document.getElementById('orientation').textContent = orientation;
+}
+
+// 页面加载时更新
+updateScreenInfo();
+
+// 窗口大小改变时更新
+window.addEventListener('resize', updateScreenInfo);
+
+// 屏幕方向改变时更新
+window.addEventListener('orientationchange', function() {
+  setTimeout(updateScreenInfo, 100);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,20 @@
+# Web 框架
+Flask>=3.0.0
+
+# 数据库驱动
+psycopg2-binary>=2.9.9  # PostgreSQL
+pymysql>=1.1.0          # MySQL
+sqlalchemy>=2.0.0       # ORM（可选）
+
+# 数据处理
+python-dateutil>=2.9.0  # 日期时间处理
+pandas>=2.0.0           # Excel 导入
+
+# Excel 导出
+openpyxl>=3.1.4
+
+# 注意：
+# - werkzeug (密码加密) 已包含在 Flask 中，无需单独安装
+# - 认证系统使用 Flask 内置的 Session 管理，无需额外依赖
+
+

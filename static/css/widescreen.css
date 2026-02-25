@@ -1,0 +1,435 @@
+/**
+ * 宽屏优化CSS
+ * 充分利用宽屏显示器的空间
+ */
+
+/* 基础容器优化 - 减少左右padding，充分利用宽屏空间 */
+@media (min-width: 1200px) {
+  body main.container-fluid {
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (min-width: 1400px) {
+  body main.container-fluid {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (min-width: 1920px) {
+  body main.container-fluid {
+    padding-left: 30px !important;
+    padding-right: 30px !important;
+    max-width: 100% !important;
+  }
+}
+
+/* 卡片布局优化 - 在宽屏上使用更多列 */
+@media (min-width: 1400px) {
+  /* 4列布局（原本是3列） */
+  .row .col-md-3 {
+    flex: 0 0 auto;
+    width: 25%;
+  }
+  
+  /* 6列布局（原本是4列） */
+  .row .col-md-4 {
+    flex: 0 0 auto;
+    width: 16.666667%;
+  }
+}
+
+@media (min-width: 1920px) {
+  /* 超宽屏：5列布局 */
+  .row .col-md-3 {
+    flex: 0 0 auto;
+    width: 20%;
+  }
+  
+  /* 超宽屏：8列布局 */
+  .row .col-md-4 {
+    flex: 0 0 auto;
+    width: 12.5%;
+  }
+}
+
+/* 图表容器优化 - 增加高度 */
+@media (min-width: 1400px) {
+  .chart-container {
+    min-height: 350px !important;
+  }
+  
+  .chart-container canvas {
+    max-height: 500px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .chart-container {
+    min-height: 400px !important;
+  }
+  
+  .chart-container canvas {
+    max-height: 600px;
+  }
+}
+
+/* 表格优化 - 增加可见列宽 */
+@media (min-width: 1400px) {
+  /* 增加文本截断的最大宽度 */
+  .text-truncate[style*="max-width: 150px"] {
+    max-width: 250px !important;
+  }
+  
+  .text-truncate[style*="max-width: 200px"] {
+    max-width: 350px !important;
+  }
+}
+
+@media (min-width: 1920px) {
+  .text-truncate[style*="max-width: 150px"] {
+    max-width: 400px !important;
+  }
+  
+  .text-truncate[style*="max-width: 200px"] {
+    max-width: 500px !important;
+  }
+}
+
+/* 表格容器优化 */
+@media (min-width: 1400px) {
+  .table-container {
+    max-height: 600px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .table-container {
+    max-height: 800px;
+  }
+}
+
+/* 卡片间距优化 */
+@media (min-width: 1400px) {
+  .row.g-4 {
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 1.5rem;
+  }
+}
+
+@media (min-width: 1920px) {
+  .row.g-4 {
+    --bs-gutter-x: 2rem;
+    --bs-gutter-y: 2rem;
+  }
+}
+
+/* 仪表盘特定优化 */
+@media (min-width: 1400px) {
+  /* 仪表盘的图表高度 */
+  #trafficChart,
+  #connectChart {
+    min-height: 400px !important;
+  }
+}
+
+@media (min-width: 1920px) {
+  #trafficChart {
+    min-height: 500px !important;
+  }
+  
+  #connectChart {
+    min-height: 350px !important;
+  }
+}
+
+/* 监控页面优化 */
+@media (min-width: 1400px) {
+  #trendFlow,
+  #trendConnect,
+  #trendUtil {
+    min-height: 350px !important;
+  }
+}
+
+@media (min-width: 1920px) {
+  #trendFlow,
+  #trendConnect,
+  #trendUtil {
+    min-height: 400px !important;
+  }
+}
+
+/* =========================
+ * Dashboard：45G指标 / 区域统计布局“钉死”
+ * - 原因：Bootstrap row/col + g-* gutter（padding/margin）会让 5 等分总宽 >100% 导致换行
+ * - 方案：宽屏用 CSS Grid，绕开 row/col 的宽度计算与 gutter
+ * ========================= */
+
+/* 45G指标：两张卡片固定并排一行（>=992px） */
+@media (min-width: 992px) {
+  .daily-45g-metrics {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .daily-45g-metrics > [class*="col-"] {
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+
+/* 区域统计：5 个区域固定同一行（>=1200px） */
+@media (min-width: 1200px) {
+  .region-5col-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1rem;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .region-5col-grid > [class*="col-"] {
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
+
+/* 告警页面优化 - 增加表格可见行数 */
+@media (min-width: 1400px) {
+  .alarm-table-container {
+    max-height: 700px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .alarm-table-container {
+    max-height: 900px;
+  }
+}
+
+/* 网格页面已有优化，这里不重复 */
+
+/* 响应式字体大小优化 */
+@media (min-width: 1920px) {
+  body {
+    font-size: 15px;
+  }
+  
+  .h1, h1 {
+    font-size: 2.75rem;
+  }
+  
+  .h2, h2 {
+    font-size: 2.25rem;
+  }
+  
+  .h3, h3 {
+    font-size: 1.875rem;
+  }
+  
+  .h4, h4 {
+    font-size: 1.625rem;
+  }
+  
+  .h5, h5 {
+    font-size: 1.375rem;
+  }
+  
+  .h6, h6 {
+    font-size: 1.125rem;
+  }
+}
+
+/* 导航栏优化 */
+@media (min-width: 1920px) {
+  .navbar-brand {
+    font-size: 1.5rem !important;
+  }
+  
+  .navbar-nav .nav-link {
+    font-size: 1.05rem;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
+/* 按钮组优化 - 在宽屏上显示更多按钮 */
+@media (min-width: 1400px) {
+  .btn-group-sm > .btn,
+  .btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* 表单控件优化 */
+@media (min-width: 1920px) {
+  .form-control,
+  .form-select {
+    font-size: 1rem;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .form-control-sm,
+  .form-select-sm {
+    font-size: 0.95rem;
+    padding: 0.375rem 0.625rem;
+  }
+}
+
+/* 卡片标题优化 */
+@media (min-width: 1920px) {
+  .card-header h5,
+  .card-header h6 {
+    font-size: 1.25rem;
+  }
+}
+
+/* 统计卡片数字优化 */
+@media (min-width: 1920px) {
+  .card-body h3 {
+    font-size: 2.25rem;
+  }
+  
+  .card-body .fs-2 {
+    font-size: 2.5rem !important;
+  }
+}
+
+/* 面包屑导航优化 */
+@media (min-width: 1920px) {
+  .breadcrumb {
+    font-size: 1.05rem;
+  }
+}
+
+/* 徽章优化 */
+@media (min-width: 1920px) {
+  .badge {
+    font-size: 0.9rem;
+    padding: 0.4em 0.7em;
+  }
+}
+
+/* 分页优化 */
+@media (min-width: 1920px) {
+  .pagination {
+    font-size: 1.05rem;
+  }
+  
+  .page-link {
+    padding: 0.5rem 0.85rem;
+  }
+}
+
+/* 模态框优化 */
+@media (min-width: 1400px) {
+  .modal-lg {
+    max-width: 900px;
+  }
+  
+  .modal-xl {
+    max-width: 1200px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .modal-lg {
+    max-width: 1100px;
+  }
+  
+  .modal-xl {
+    max-width: 1500px;
+  }
+}
+
+/* 下拉菜单优化 */
+@media (min-width: 1920px) {
+  .dropdown-menu {
+    font-size: 1rem;
+  }
+  
+  .dropdown-item {
+    padding: 0.5rem 1.25rem;
+  }
+}
+
+/* 工具提示优化 */
+@media (min-width: 1920px) {
+  .tooltip {
+    font-size: 0.95rem;
+  }
+}
+
+/* 警告框优化 */
+@media (min-width: 1920px) {
+  .alert {
+    font-size: 1.05rem;
+    padding: 1rem 1.25rem;
+  }
+}
+
+/* 列表组优化 */
+@media (min-width: 1920px) {
+  .list-group-item {
+    font-size: 1.05rem;
+    padding: 0.875rem 1.25rem;
+  }
+}
+
+/* 进度条优化 */
+@media (min-width: 1920px) {
+  .progress {
+    height: 1.25rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* 输入组优化 */
+@media (min-width: 1920px) {
+  .input-group-text {
+    font-size: 1rem;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+/* 页脚优化 */
+@media (min-width: 1200px) {
+  .footer .container-fluid {
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (min-width: 1400px) {
+  .footer .container-fluid {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+}
+
+@media (min-width: 1920px) {
+  .footer {
+    font-size: 1rem;
+  }
+  
+  .footer .container-fluid {
+    padding-left: 30px !important;
+    padding-right: 30px !important;
+  }
+}

@@ -1,0 +1,552 @@
+{% extends "base.html" %}
+
+{% block title %}计划任务管理{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h2><i class="bi bi-clock-history"></i> 计划任务管理</h2>
+            <p class="text-muted">管理定时执行的 Python 脚本和系统命令</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addJobModal">
+                <i class="bi bi-plus-circle"></i> 新建任务
+            </button>
+            <button class="btn btn-secondary" onclick="refreshJobs()">
+                <i class="bi bi-arrow-clockwise"></i> 刷新
+            </button>
+        </div>
+    </div>
+
+    <!-- 任务列表 -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="jobsTable">
+                    <thead>
+                        <tr>
+                            <th>任务名称</th>
+                            <th>类型</th>
+                            <th>调度方式</th>
+                            <th>下次执行</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jobsTableBody">
+                        {% for job in jobs %}
+                        <tr data-job-id="{{ job.id }}">
+                            <td>
+                                <strong>{{ job.name }}</strong><br>
+                                <small class="text-muted">ID: {{ job.id }}</small>
+                            </td>
+                            <td>
+                                {% if job.type == 'python' %}
+                                <span class="badge bg-info"><i class="bi bi-file-code"></i> Python</span>
+                                {% else %}
+                                <span class="badge bg-secondary"><i class="bi bi-terminal"></i> 命令</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ get_schedule_desc(job) }}</td>
+                            <td>
+                                {% if job.next_run_time %}
+                                <span class="text-success">{{ job.next_run_time }}</span>
+                                {% else %}
+                                <span class="text-muted">未调度</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if job.enabled %}
+                                <span class="badge bg-success">启用</span>
+                                {% else %}
+                                <span class="badge bg-secondary">禁用</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="runJobNow('{{ job.id }}')">
+                                    <i class="bi bi-play-fill"></i> 立即执行
+                                </button>
+                                <button class="btn btn-sm btn-info" onclick="viewJobLogs('{{ job.id }}')">
+                                    <i class="bi bi-file-text"></i> 日志
+                                </button>
+                                <button class="btn btn-sm btn-warning" onclick="editJob('{{ job.id }}')">
+                                    <i class="bi bi-pencil"></i> 编辑
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteJob('{{ job.id }}')">
+                                    <i class="bi bi-trash"></i> 删除
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 执行日志 -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5><i class="bi bi-journal-text"></i> 最近执行日志</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm" id="logsTable">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>任务</th>
+                            <th>类型</th>
+                            <th>耗时</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody">
+                        <!-- 通过 AJAX 加载 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新建/编辑任务模态框 -->
+<div class="modal fade" id="addJobModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="jobModalTitle">新建任务</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="jobForm">
+                    <input type="hidden" id="jobId" name="id">
+                    
+                    <!-- 基本信息 -->
+                    <div class="mb-3">
+                        <label class="form-label">任务名称 *</label>
+                        <input type="text" class="form-control" id="jobName" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">任务类型 *</label>
+                        <select class="form-select" id="jobType" name="type" required onchange="toggleJobTypeFields()">
+                            <option value="python">Python 脚本</option>
+                            <option value="command">系统命令</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Python 脚本字段 -->
+                    <div id="pythonFields">
+                        <div class="mb-3">
+                            <label class="form-label">脚本路径 *</label>
+                            <input type="text" class="form-control" id="scriptPath" name="script_path" 
+                                   placeholder="例如: /path/to/script.py">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">脚本参数（可选）</label>
+                            <input type="text" class="form-control" id="scriptArgs" name="args" 
+                                   placeholder="例如: arg1 arg2">
+                            <small class="text-muted">多个参数用空格分隔</small>
+                        </div>
+                    </div>
+                    
+                    <!-- 命令字段 -->
+                    <div id="commandFields" style="display:none;">
+                        <div class="mb-3">
+                            <label class="form-label">命令 *</label>
+                            <textarea class="form-control" id="command" name="command" rows="3"
+                                      placeholder="例如: ls -la /tmp"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">工作目录（可选）</label>
+                        <input type="text" class="form-control" id="workingDir" name="working_dir" 
+                               placeholder="默认为当前目录">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">超时时间（秒）</label>
+                        <input type="number" class="form-control" id="timeout" name="timeout" 
+                               value="3600" min="1">
+                    </div>
+                    
+                    <!-- 调度配置 -->
+                    <hr>
+                    <h6>调度配置</h6>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">调度类型 *</label>
+                        <select class="form-select" id="scheduleType" name="schedule_type" required onchange="toggleScheduleFields()">
+                            <option value="cron">Cron 表达式（按时、按日、按周等）</option>
+                            <option value="interval">间隔执行</option>
+                            <option value="date">一次性执行</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Cron 调度 -->
+                    <div id="cronFields">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">小时</label>
+                                <input type="text" class="form-control" id="cronHour" placeholder="例如: 9 或 */2">
+                                <small class="text-muted">* 表示每小时，*/2 表示每2小时</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">分钟</label>
+                                <input type="text" class="form-control" id="cronMinute" placeholder="例如: 0 或 */30">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">星期几</label>
+                                <input type="text" class="form-control" id="cronDayOfWeek" placeholder="0-6 或 mon-sun">
+                                <small class="text-muted">0=周日，1=周一...6=周六</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">日期</label>
+                                <input type="text" class="form-control" id="cronDay" placeholder="1-31">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">月份</label>
+                                <input type="text" class="form-control" id="cronMonth" placeholder="1-12">
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <strong>示例：</strong><br>
+                            - 每天9点: 小时=9, 分钟=0<br>
+                            - 每周一9点: 小时=9, 分钟=0, 星期几=1<br>
+                            - 每小时: 小时=*, 分钟=0<br>
+                            - 每30分钟: 小时=*, 分钟=*/30
+                        </div>
+                    </div>
+                    
+                    <!-- 间隔调度 -->
+                    <div id="intervalFields" style="display:none;">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">天</label>
+                                <input type="number" class="form-control" id="intervalDays" value="0" min="0">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">小时</label>
+                                <input type="number" class="form-control" id="intervalHours" value="0" min="0">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">分钟</label>
+                                <input type="number" class="form-control" id="intervalMinutes" value="0" min="0">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">秒</label>
+                                <input type="number" class="form-control" id="intervalSeconds" value="0" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 一次性调度 -->
+                    <div id="dateFields" style="display:none;">
+                        <div class="mb-3">
+                            <label class="form-label">执行时间</label>
+                            <input type="datetime-local" class="form-control" id="runDate">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="enabled" name="enabled" checked>
+                            <label class="form-check-label" for="enabled">
+                                启用任务
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveJob()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 日志详情模态框 -->
+<div class="modal fade" id="logDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">执行日志详情</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="logDetailContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 页面加载时获取日志
+document.addEventListener('DOMContentLoaded', function() {
+    loadLogs();
+    // 每30秒刷新一次日志
+    setInterval(loadLogs, 30000);
+});
+
+function toggleJobTypeFields() {
+    const jobType = document.getElementById('jobType').value;
+    document.getElementById('pythonFields').style.display = jobType === 'python' ? 'block' : 'none';
+    document.getElementById('commandFields').style.display = jobType === 'command' ? 'block' : 'none';
+}
+
+function toggleScheduleFields() {
+    const scheduleType = document.getElementById('scheduleType').value;
+    document.getElementById('cronFields').style.display = scheduleType === 'cron' ? 'block' : 'none';
+    document.getElementById('intervalFields').style.display = scheduleType === 'interval' ? 'block' : 'none';
+    document.getElementById('dateFields').style.display = scheduleType === 'date' ? 'block' : 'none';
+}
+
+function refreshJobs() {
+    location.reload();
+}
+
+function saveJob() {
+    const form = document.getElementById('jobForm');
+    const jobId = document.getElementById('jobId').value;
+    const isEdit = jobId !== '';
+    
+    // 构建任务配置
+    const jobConfig = {
+        id: isEdit ? jobId : 'job_' + Date.now(),
+        name: document.getElementById('jobName').value,
+        type: document.getElementById('jobType').value,
+        enabled: document.getElementById('enabled').checked,
+        timeout: parseInt(document.getElementById('timeout').value),
+        working_dir: document.getElementById('workingDir').value || null,
+        schedule_type: document.getElementById('scheduleType').value,
+        schedule_config: {}
+    };
+    
+    // 任务类型特定字段
+    if (jobConfig.type === 'python') {
+        jobConfig.script_path = document.getElementById('scriptPath').value;
+        const args = document.getElementById('scriptArgs').value.trim();
+        jobConfig.args = args ? args.split(/\s+/) : [];
+    } else {
+        jobConfig.command = document.getElementById('command').value;
+    }
+    
+    // 调度配置
+    if (jobConfig.schedule_type === 'cron') {
+        const cronConfig = {};
+        const hour = document.getElementById('cronHour').value;
+        const minute = document.getElementById('cronMinute').value;
+        const dayOfWeek = document.getElementById('cronDayOfWeek').value;
+        const day = document.getElementById('cronDay').value;
+        const month = document.getElementById('cronMonth').value;
+        
+        if (hour) cronConfig.hour = hour;
+        if (minute) cronConfig.minute = minute;
+        if (dayOfWeek) cronConfig.day_of_week = dayOfWeek;
+        if (day) cronConfig.day = day;
+        if (month) cronConfig.month = month;
+        
+        jobConfig.schedule_config = cronConfig;
+    } else if (jobConfig.schedule_type === 'interval') {
+        jobConfig.schedule_config = {
+            days: parseInt(document.getElementById('intervalDays').value) || 0,
+            hours: parseInt(document.getElementById('intervalHours').value) || 0,
+            minutes: parseInt(document.getElementById('intervalMinutes').value) || 0,
+            seconds: parseInt(document.getElementById('intervalSeconds').value) || 0
+        };
+    } else if (jobConfig.schedule_type === 'date') {
+        jobConfig.schedule_config = {
+            run_date: document.getElementById('runDate').value
+        };
+    }
+    
+    // 发送请求
+    const url = isEdit ? `/scheduler/api/jobs/${jobId}` : '/scheduler/api/jobs';
+    const method = isEdit ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(jobConfig)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('错误: ' + data.error);
+        } else {
+            alert(data.message);
+            location.reload();
+        }
+    })
+    .catch(error => {
+        alert('请求失败: ' + error);
+    });
+}
+
+function editJob(jobId) {
+    fetch(`/scheduler/api/jobs/${jobId}`)
+    .then(response => response.json())
+    .then(data => {
+        const job = data.job;
+        
+        // 填充表单
+        document.getElementById('jobModalTitle').textContent = '编辑任务';
+        document.getElementById('jobId').value = job.id;
+        document.getElementById('jobName').value = job.name;
+        document.getElementById('jobType').value = job.type;
+        document.getElementById('enabled').checked = job.enabled;
+        document.getElementById('timeout').value = job.timeout || 3600;
+        document.getElementById('workingDir').value = job.working_dir || '';
+        document.getElementById('scheduleType').value = job.schedule_type;
+        
+        toggleJobTypeFields();
+        toggleScheduleFields();
+        
+        if (job.type === 'python') {
+            document.getElementById('scriptPath').value = job.script_path;
+            document.getElementById('scriptArgs').value = (job.args || []).join(' ');
+        } else {
+            document.getElementById('command').value = job.command;
+        }
+        
+        // 填充调度配置
+        if (job.schedule_type === 'cron') {
+            const config = job.schedule_config;
+            document.getElementById('cronHour').value = config.hour || '';
+            document.getElementById('cronMinute').value = config.minute || '';
+            document.getElementById('cronDayOfWeek').value = config.day_of_week || '';
+            document.getElementById('cronDay').value = config.day || '';
+            document.getElementById('cronMonth').value = config.month || '';
+        } else if (job.schedule_type === 'interval') {
+            const config = job.schedule_config;
+            document.getElementById('intervalDays').value = config.days || 0;
+            document.getElementById('intervalHours').value = config.hours || 0;
+            document.getElementById('intervalMinutes').value = config.minutes || 0;
+            document.getElementById('intervalSeconds').value = config.seconds || 0;
+        } else if (job.schedule_type === 'date') {
+            document.getElementById('runDate').value = job.schedule_config.run_date;
+        }
+        
+        // 显示模态框
+        new bootstrap.Modal(document.getElementById('addJobModal')).show();
+    });
+}
+
+function deleteJob(jobId) {
+    if (!confirm('确定要删除这个任务吗？')) {
+        return;
+    }
+    
+    fetch(`/scheduler/api/jobs/${jobId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('错误: ' + data.error);
+        } else {
+            alert(data.message);
+            location.reload();
+        }
+    });
+}
+
+function runJobNow(jobId) {
+    if (!confirm('确定要立即执行这个任务吗？')) {
+        return;
+    }
+    
+    fetch(`/scheduler/api/jobs/${jobId}/run`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('错误: ' + data.error);
+        } else {
+            alert(data.message);
+            setTimeout(loadLogs, 2000);  // 2秒后刷新日志
+        }
+    });
+}
+
+function viewJobLogs(jobId) {
+    fetch(`/scheduler/api/jobs/${jobId}/logs?limit=50`)
+    .then(response => response.json())
+    .then(data => {
+        const logs = data.logs;
+        let html = '<div class="list-group">';
+        
+        logs.forEach(log => {
+            const statusClass = log.status === 'success' ? 'success' : 
+                              log.status === 'failed' ? 'danger' : 
+                              log.status === 'timeout' ? 'warning' : 'secondary';
+            
+            html += `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <h6>${log.start_time}</h6>
+                        <span class="badge bg-${statusClass}">${log.status}</span>
+                    </div>
+                    <p class="mb-1">耗时: ${log.duration ? log.duration.toFixed(2) + 's' : 'N/A'}</p>
+                    ${log.stdout ? '<pre class="mb-0"><small>' + log.stdout + '</small></pre>' : ''}
+                    ${log.stderr ? '<pre class="mb-0 text-danger"><small>' + log.stderr + '</small></pre>' : ''}
+                    ${log.error ? '<p class="text-danger mb-0">' + log.error + '</p>' : ''}
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        
+        document.getElementById('logDetailContent').innerHTML = html;
+        new bootstrap.Modal(document.getElementById('logDetailModal')).show();
+    });
+}
+
+function loadLogs() {
+    fetch('/scheduler/api/logs?limit=20')
+    .then(response => response.json())
+    .then(data => {
+        const tbody = document.getElementById('logsTableBody');
+        tbody.innerHTML = '';
+        
+        data.logs.forEach(log => {
+            const statusClass = log.status === 'success' ? 'success' : 
+                              log.status === 'failed' ? 'danger' : 
+                              log.status === 'timeout' ? 'warning' : 'secondary';
+            
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td><small>${log.start_time}</small></td>
+                <td>${log.job_name}</td>
+                <td><span class="badge bg-${log.type === 'python' ? 'info' : 'secondary'}">${log.type}</span></td>
+                <td>${log.duration ? log.duration.toFixed(2) + 's' : 'N/A'}</td>
+                <td><span class="badge bg-${statusClass}">${log.status}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-info" onclick="viewJobLogs('${log.job_id}')">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </td>
+            `;
+        });
+    });
+}
+
+// 重置表单
+document.getElementById('addJobModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('jobForm').reset();
+    document.getElementById('jobId').value = '';
+    document.getElementById('jobModalTitle').textContent = '新建任务';
+});
+</script>
+
+{% endblock %}

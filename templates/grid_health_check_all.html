@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}全量网格体检{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- 面包屑导航 -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('grid.grid') }}">网格监控</a></li>
+            <li class="breadcrumb-item active">全量网格体检</li>
+        </ol>
+    </nav>
+
+    <!-- 标题和操作栏 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="bi bi-heart-pulse"></i> 全量网格体检
+            </h2>
+            <small class="text-muted">体检时间: {{ check_time.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+        </div>
+        <div>
+            <a href="{{ url_for('grid.export_health_check') }}" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel"></i> 导出体检结果
+            </a>
+            <a href="{{ url_for('grid.grid') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> 返回网格监控
+            </a>
+        </div>
+    </div>
+
+    <!-- 汇总统计卡片 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">总网格数</h5>
+                    <h2 class="text-primary">{{ total_grids }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">总小区数</h5>
+                    <h2 class="text-info">{{ total_cells }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">健康小区</h5>
+                    <h2 class="text-success">{{ total_healthy }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">不健康小区</h5>
+                    <h2 class="text-danger">{{ total_unhealthy }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 整体健康率 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">整体健康率</h5>
+            <div class="progress" style="height: 30px;">
+                <div class="progress-bar bg-success" role="progressbar" 
+                     style="width: {{ overall_healthy_rate }}%;" 
+                     aria-valuenow="{{ overall_healthy_rate }}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="100">
+                    {{ overall_healthy_rate }}%
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 网格体检结果表格 -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-list-check"></i> 网格体检结果（按健康率排序）</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive table-fixed-header">
+                <table class="table table-hover" id="healthCheckTable">
+                    <thead class="table-light sticky-header">
+                        <tr>
+                            <th>排名</th>
+                            <th>网格ID</th>
+                            <th>网格名称</th>
+                            <th>督办标签</th>
+                            <th>网格区域</th>
+                            <th>归属单位</th>
+                            <th>总小区数</th>
+                            <th>健康小区</th>
+                            <th>不健康小区</th>
+                            <th>健康率</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in health_results %}
+                        <tr class="{{ 'table-danger' if result.healthy_rate < 50 else ('table-warning' if result.healthy_rate < 80 else '') }}">
+                            <td>{{ loop.index }}</td>
+                            <td><code>{{ result.grid_id }}</code></td>
+                            <td>{{ result.grid_name or result.grid_id }}</td>
+                            <td>
+                                {% if result.grid_pp %}
+                                <span class="badge bg-warning text-dark">{{ result.grid_pp }}</span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ result.grid_area or '-' }}</td>
+                            <td>{{ result.gird_dd or '-' }}</td>
+                            <td>{{ result.total_cells }}</td>
+                            <td><span class="badge bg-success">{{ result.healthy_cells }}</span></td>
+                            <td><span class="badge bg-danger">{{ result.unhealthy_cells }}</span></td>
+                            <td>
+                                <div class="progress" style="height: 20px; min-width: 80px;">
+                                    <div class="progress-bar 
+                                        {% if result.healthy_rate >= 80 %}bg-success
+                                        {% elif result.healthy_rate >= 50 %}bg-warning
+                                        {% else %}bg-danger{% endif %}" 
+                                         role="progressbar" 
+                                         style="width: {{ result.healthy_rate }}%;">
+                                        {{ result.healthy_rate }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('grid.grid_health_check', grid_id=result.grid_id) }}" 
+                                   class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye"></i> 查看详情
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* 固定表头样式 */
+.table-fixed-header {
+    max-height: 800px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8f9fa !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sticky-header th {
+    background-color: #f8f9fa !important;
+    border-bottom: 2px solid #dee2e6;
+}
+
+code {
+    font-size: 0.875rem;
+}
+
+.progress {
+    background-color: #e9ecef;
+}
+</style>
+
+<script>
+// 使用 DataTables 为全量网格体检表格提供分页和排序，减轻一次性渲染开销
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('healthCheckTable') && window.DataTable) {
+        new DataTable('#healthCheckTable', {
+            responsive: true,
+            ordering: true,
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/zh-CN.json'
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

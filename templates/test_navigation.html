@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>导航栏测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #0071CE;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .nav-test {
+            background: #0071CE;
+            color: white;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .nav-test a {
+            color: white;
+            text-decoration: none;
+            margin-right: 15px;
+            padding: 5px 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+        .nav-test a:hover {
+            background: rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 导航栏诊断测试页面</h1>
+    
+    <div class="test-section">
+        <h2>1. 访问方式检测</h2>
+        <div id="protocol-check"></div>
+        <script>
+            var protocolDiv = document.getElementById('protocol-check');
+            var protocol = window.location.protocol;
+            var host = window.location.host;
+            var href = window.location.href;
+            
+            if (protocol === 'file:') {
+                protocolDiv.innerHTML = '<div class="status error">' +
+                    '<strong>❌ 错误：</strong>您正在通过 file:// 协议访问！<br>' +
+                    '<strong>当前地址：</strong>' + href + '<br>' +
+                    '<strong>解决方案：</strong><br>' +
+                    '1. 运行 Flask 应用：<code>python3 app.py</code><br>' +
+                    '2. 在浏览器中访问：<code>http://127.0.0.1:5000/</code>' +
+                    '</div>';
+            } else if (protocol === 'http:' || protocol === 'https:') {
+                protocolDiv.innerHTML = '<div class="status success">' +
+                    '<strong>✅ 正确：</strong>您正在通过 HTTP 协议访问<br>' +
+                    '<strong>当前地址：</strong>' + href + '<br>' +
+                    '<strong>主机：</strong>' + host +
+                    '</div>';
+            } else {
+                protocolDiv.innerHTML = '<div class="status warning">' +
+                    '<strong>⚠️ 警告：</strong>未知的访问协议<br>' +
+                    '<strong>协议：</strong>' + protocol +
+                    '</div>';
+            }
+        </script>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Flask 模板变量测试</h2>
+        <div class="status {{ 'success' if nav_items else 'error' }}">
+            <strong>导航项数量：</strong>{{ nav_items|length if nav_items else 0 }}<br>
+            {% if nav_items %}
+                <strong>✅ nav_items 变量存在</strong><br>
+                <strong>导航项列表：</strong>
+                <ul>
+                {% for key, text, href in nav_items %}
+                    <li>{{ text }} ({{ key }}) - {{ href }}</li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <strong>❌ nav_items 变量不存在或为空</strong>
+            {% endif %}
+        </div>
+        
+        <div class="status {{ 'success' if health_pg is defined else 'error' }}">
+            <strong>PostgreSQL 状态：</strong>
+            {% if health_pg is defined %}
+                {{ '🟢 已连接' if health_pg else '🔴 未连接' }}
+            {% else %}
+                ❌ 变量未定义
+            {% endif %}
+        </div>
+        
+        <div class="status {{ 'success' if health_mysql is defined else 'error' }}">
+            <strong>MySQL 状态：</strong>
+            {% if health_mysql is defined %}
+                {{ '🟢 已连接' if health_mysql else '🔴 未连接' }}
+            {% else %}
+                ❌ 变量未定义
+            {% endif %}
+        </div>
+        
+        <div class="status {{ 'success' if auth_enabled is defined else 'error' }}">
+            <strong>认证状态：</strong>
+            {% if auth_enabled is defined %}
+                {{ '启用' if auth_enabled else '禁用' }}
+            {% else %}
+                ❌ 变量未定义
+            {% endif %}
+        </div>
+        
+        {% if current_user %}
+        <div class="status success">
+            <strong>当前用户：</strong>{{ user_name or current_user }}<br>
+            <strong>用户角色：</strong>{{ user_role or '未知' }}
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 静态资源加载测试</h2>
+        <div id="resource-check">
+            <p>正在检测静态资源...</p>
+        </div>
+        <script>
+            function checkResource(url, name, callback) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('HEAD', url, true);
+                xhr.onload = function() {
+                    callback(xhr.status === 200, xhr.status);
+                };
+                xhr.onerror = function() {
+                    callback(false, 0);
+                };
+                xhr.send();
+            }
+            
+            var resources = [
+                {url: '{{ url_for("static", filename="css/bootstrap.min.css") }}', name: 'Bootstrap CSS'},
+                {url: '{{ url_for("static", filename="css/bootstrap-icons.min.css") }}', name: 'Bootstrap Icons CSS'},
+                {url: '{{ url_for("static", filename="css/style.css") }}', name: '自定义样式'},
+                {url: '{{ url_for("static", filename="js/bootstrap.bundle.min.js") }}', name: 'Bootstrap JS'},
+                {url: '{{ url_for("static", filename="js/chart.umd.min.js") }}', name: 'Chart.js'}
+            ];
+            
+            var results = [];
+            var completed = 0;
+            
+            resources.forEach(function(resource) {
+                checkResource(resource.url, resource.name, function(success, status) {
+                    results.push({
+                        name: resource.name,
+                        url: resource.url,
+                        success: success,
+                        status: status
+                    });
+                    completed++;
+                    
+                    if (completed === resources.length) {
+                        displayResults();
+                    }
+                });
+            });
+            
+            function displayResults() {
+                var html = '';
+                var allSuccess = true;
+                
+                results.forEach(function(result) {
+                    var statusClass = result.success ? 'success' : 'error';
+                    var statusIcon = result.success ? '✅' : '❌';
+                    allSuccess = allSuccess && result.success;
+                    
+                    html += '<div class="status ' + statusClass + '">' +
+                        '<strong>' + statusIcon + ' ' + result.name + '</strong><br>' +
+                        'URL: <code>' + result.url + '</code><br>' +
+                        'HTTP 状态: ' + result.status +
+                        '</div>';
+                });
+                
+                if (allSuccess) {
+                    html = '<div class="status success"><strong>✅ 所有静态资源加载成功！</strong></div>' + html;
+                } else {
+                    html = '<div class="status error"><strong>❌ 部分静态资源加载失败</strong></div>' + html;
+                }
+                
+                document.getElementById('resource-check').innerHTML = html;
+            }
+        </script>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 导航栏样式测试</h2>
+        <p>下面是一个模拟的导航栏，如果显示正常，说明 HTML 结构没有问题：</p>
+        <div class="nav-test">
+            <strong>📊 保障指标监控系统</strong>
+            <div style="margin-top: 10px;">
+                <a href="#">全网监控</a>
+                <a href="#">保障监控</a>
+                <a href="#">小区指标查询</a>
+                <a href="#">场景管理</a>
+                <a href="#">网格监控</a>
+                <a href="#">告警监控</a>
+            </div>
+        </div>
+        <p>如果上面的蓝色导航栏显示正常，说明基本的 HTML/CSS 功能正常。</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. 浏览器信息</h2>
+        <div class="status success">
+            <strong>用户代理：</strong><br>
+            <code id="user-agent"></code>
+        </div>
+        <script>
+            document.getElementById('user-agent').textContent = navigator.userAgent;
+        </script>
+    </div>
+    
+    <div class="test-section">
+        <h2>6. 建议操作</h2>
+        <ol>
+            <li>确保通过 <code>http://127.0.0.1:5000/</code> 访问，而不是直接打开 HTML 文件</li>
+            <li>检查 Flask 应用是否正在运行：<code>python3 app.py</code></li>
+            <li>清除浏览器缓存后重试（Ctrl+Shift+Delete 或 Cmd+Shift+Delete）</li>
+            <li>打开浏览器开发者工具（F12）查看 Console 和 Network 标签页</li>
+            <li>如果所有检查都通过但导航栏仍不显示，请查看 <code>NAVIGATION_FIX.md</code> 文档</li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h2>7. 快速链接</h2>
+        <p>点击下面的链接测试各个页面：</p>
+        <ul>
+            <li><a href="{{ url_for('main.dashboard') }}">全网监控</a></li>
+            <li><a href="{{ url_for('main.monitor') }}">保障监控</a></li>
+            <li><a href="{{ url_for('main.cell') }}">小区指标查询</a></li>
+            <li><a href="{{ url_for('main.scenarios') }}">场景管理</a></li>
+            <li><a href="{{ url_for('grid.grid') }}">网格监控</a></li>
+            <li><a href="{{ url_for('alarm.alarm') }}">告警监控</a></li>
+            {% if auth_enabled %}
+            <li><a href="{{ url_for('login') }}">登录页面</a></li>
+            {% if user_role == 'admin' %}
+            <li><a href="{{ url_for('admin.admin') }}">管理员控制台</a></li>
+            {% endif %}
+            {% endif %}
+        </ul>
+    </div>
+</body>
+</html>

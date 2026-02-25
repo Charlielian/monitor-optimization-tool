@@ -1,0 +1,648 @@
+{% extends "base.html" %}
+{% block content %}
+{% set granularity = granularity|default("15m") %}
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card shadow">
+      <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-search me-2 fs-4"></i>
+          <h5 class="mb-0 fw-bold">指标查询</h5>
+        </div>
+      </div>
+      <div class="card-body p-4">
+        <!-- 查询表单 -->
+        <form class="row g-3" id="cellQueryForm">
+          <div class="col-md-6 col-lg-3">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-calendar-event text-primary me-1"></i>开始时间
+              <span class="text-danger">*</span>
+            </label>
+            <input type="datetime-local" class="form-control" name="start_time" value="{{ start_time }}" required>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-calendar-check text-primary me-1"></i>结束时间
+              <span class="text-danger">*</span>
+            </label>
+            <input type="datetime-local" class="form-control" name="end_time" value="{{ end_time }}" required>
+          </div>
+          <div class="col-md-6 col-lg-2">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-broadcast text-primary me-1"></i>制式
+              <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" name="cell_network" required>
+              <option value="混查" {% if cell_network == "混查" %}selected{% endif %}>混查(自动识别)</option>
+              <option value="4G" {% if cell_network == "4G" %}selected{% endif %}>4G</option>
+              <option value="5G" {% if cell_network == "5G" %}selected{% endif %}>5G</option>
+            </select>
+          </div>
+          <div class="col-md-6 col-lg-2">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-clock-history text-primary me-1"></i>粒度
+              <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" name="granularity" required>
+              <option value="15m" {% if granularity == "15m" %}selected{% endif %}>15分钟</option>
+              <option value="1h" {% if granularity == "1h" %}selected{% endif %}>1小时</option>
+              <option value="1d" {% if granularity == "1d" %}selected{% endif %}>1天</option>
+            </select>
+          </div>
+          <div class="col-md-6 col-lg-2">
+            <label class="form-label fw-semibold">
+                <i class="bi bi-list-check text-primary me-1"></i>查询类型
+                <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" name="query_type" required>
+                <option value="cell" {% if query_type == "cell" or not query_type %}selected{% endif %}>小区</option>
+                <option value="summary" {% if query_type == "summary" %}selected{% endif %}>汇总</option>
+            </select>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <label class="form-label fw-semibold">
+                <i class="bi bi-input-cursor-text text-primary me-1"></i>查询方式
+                <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" name="query_method" id="queryMethod" required>
+                <option value="cgi" {% if not selected_scenario_ids %}selected{% endif %}>输入CGI</option>
+                <option value="scenario" {% if selected_scenario_ids %}selected{% endif %}>选择场景</option>
+            </select>
+        </div>
+        <div class="col-md-6 col-lg-3" id="scenarioSection">
+            <label class="form-label fw-semibold">
+                <i class="bi bi-folder2 text-primary me-1"></i>选择场景
+                <span class="text-muted">(支持多选)</span>
+            </label>
+            <select class="form-select" name="scenario_ids" multiple="multiple" size="3">
+                <option value="">-- 选择场景 --</option>
+                {% for scenario in scenarios %}
+                <option value="{{ scenario.id }}" {% if selected_scenario_ids and scenario.id in selected_scenario_ids %}selected{% endif %}>{{ scenario.scenario_name }}{% if scenario.description %} ({{ scenario.description }}){% endif %}</option>
+                {% endfor %}
+            </select>
+            <div class="form-text">
+                <i class="bi bi-info-circle me-1"></i>选择场景后，将查询所选场景中的所有小区
+            </div>
+        </div>
+        <div class="col-12" id="cgiSection">
+            <label class="form-label fw-semibold">
+                <i class="bi bi-pin-map text-primary me-1"></i>小区CGI
+                <span class="badge bg-info ms-2">最多200个</span>
+            </label>
+            <textarea class="form-control" name="cell_cgi" rows="3" placeholder="输入小区CGI，多个用逗号分隔，例如：460-00-123456-7, 460-00-12345678-9">{{ cell_cgi }}</textarea>
+            <div class="form-text">
+                <i class="bi bi-info-circle me-1"></i>支持批量查询，多个CGI用逗号分隔，最多可查询200个小区<br>
+                <i class="bi bi-lightbulb me-1"></i>CGI格式：460-00-enb-lcrid（4G为6位eNodeB，5G为8位gNodeB），选择"混查"可自动识别4G/5G
+            </div>
+        </div>
+          <div class="col-12">
+            <button class="btn btn-primary btn-lg px-5" type="submit" id="queryBtn">
+              <i class="bi bi-search me-2"></i>开始查询
+            </button>
+            <button class="btn btn-outline-secondary btn-lg px-4 ms-2" type="reset">
+              <i class="bi bi-arrow-counterclockwise me-2"></i>重置
+            </button>
+          </div>
+        </form>
+
+        <!-- 查询结果容器 -->
+        <div id="queryResultsContainer">
+        {% if cell_cgi and cell_data %}
+        <hr class="my-4">
+        
+        <!-- 混查模式提示 -->
+        {% if cell_network == "混查" and auto_detected_network %}
+        <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+          <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+          <div>
+            <h6 class="alert-heading mb-1">自动识别结果</h6>
+            <p class="mb-0">
+              {% if auto_detected_network['4G']|length > 0 %}
+              <span class="badge bg-primary me-2">4G小区: {{ auto_detected_network['4G']|length }}个</span>
+              {% endif %}
+              {% if auto_detected_network['5G']|length > 0 %}
+              <span class="badge bg-danger me-2">5G小区: {{ auto_detected_network['5G']|length }}个</span>
+              {% endif %}
+              {% if auto_detected_network['unknown']|length > 0 %}
+              <span class="badge bg-warning text-dark">无法识别: {{ auto_detected_network['unknown']|length }}个</span>
+              {% endif %}
+            </p>
+          </div>
+        </div>
+        {% endif %}
+        
+        <!-- 分离4G和5G数据 -->
+        {% set data_4g = [] %}
+        {% set data_5g = [] %}
+        {% for row in cell_data %}
+          {% if row.network_type == '4G' %}
+            {% set _ = data_4g.append(row) %}
+          {% elif row.network_type == '5G' %}
+            {% set _ = data_5g.append(row) %}
+          {% endif %}
+        {% endfor %}
+        
+        <!-- 4G查询结果表 -->
+        {% if data_4g|length > 0 %}
+        <div class="card border-success mb-4">
+          <div class="card-header bg-success bg-opacity-10 border-success d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold text-success">
+              <i class="bi bi-4-circle-fill me-2"></i>4G小区查询结果
+              <span class="badge bg-success ms-2">{{ data_4g|length }} 条记录</span>
+            </h6>
+            <a class="btn btn-sm btn-success" href="{{ url_for('export.export_cell_data') }}?cell_cgi={{ cell_cgi }}&cell_network=4G&start_time={{ start_time }}&end_time={{ end_time }}&granularity={{ granularity }}&query_type={{ query_type }}{% if selected_scenario_ids %}&scenario_ids={{ selected_scenario_ids|join('&scenario_ids=') }}{% endif %}">
+              <i class="bi bi-download me-1"></i> 导出数据
+            </a>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+              <table class="table table-hover table-striped mb-0">
+                <thead class="table-success sticky-top">
+                  <tr>
+                    <th class="text-center" style="min-width: 150px;">
+                      <i class="bi bi-clock me-1"></i>时间
+                    </th>
+                    <th class="text-center" style="min-width: 180px;">
+                      <i class="bi bi-pin-map me-1"></i>小区CGI
+                    </th>
+                    <th class="text-center" style="min-width: 200px;">
+                      <i class="bi bi-building me-1"></i>小区名
+                    </th>
+                    <th class="text-center" style="min-width: 100px;">
+                      <i class="bi bi-reception-4 me-1"></i>干扰
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-arrow-up-circle me-1"></i>上行PRB%
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-arrow-down-circle me-1"></i>下行PRB%
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-speedometer2 me-1"></i>最大PRB%
+                    </th>
+                    <th class="text-center" style="min-width: 140px;">
+                      <i class="bi bi-check-circle me-1"></i>无线接通率%
+                    </th>
+                    <th class="text-center" style="min-width: 140px;">
+                      <i class="bi bi-arrow-right-circle me-1"></i>切换成功率%
+                    </th>
+                    <th class="text-center" style="min-width: 140px;">
+                      <i class="bi bi-x-circle me-1"></i>Erab掉线率%
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-hdd-network me-1"></i>流量
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-people me-1"></i>RRC用户数
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-telephone me-1"></i>话务量
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in data_4g %}
+                  {% set traffic_gb = row.total_traffic|float %}
+                  {% set use_tb = traffic_gb >= 1024 %}
+                  {% set traffic_value = (traffic_gb / 1024) if use_tb else traffic_gb %}
+                  {% set traffic_unit = 'TB' if use_tb else 'GB' %}
+                  {% set ul_prb = row.ul_prb_utilization|float if row.ul_prb_utilization else 0 %}
+                  {% set dl_prb = row.dl_prb_utilization|float if row.dl_prb_utilization else 0 %}
+                  {% set max_prb = ul_prb if ul_prb > dl_prb else dl_prb %}
+                  {% set voice_erl = row.voice_erl|float if row.voice_erl else 0 %}
+                  {% set use_wan_erl = voice_erl >= 10000 %}
+                  {% set voice_value = (voice_erl / 10000) if use_wan_erl else voice_erl %}
+                  {% set voice_unit = '万Erl' if use_wan_erl else 'Erl' %}
+                  <tr>
+                    <td class="text-center">{{ row.start_time }}</td>
+                    <td class="text-center"><code class="text-success">{{ row.cgi or row.cell_id or '-' }}</code></td>
+                    <td class="text-center">{{ row.cellname or '-' }}</td>
+                    <td class="text-center">{{ "%.2f"|format(row.interference or 0) }}</td>
+                    <td class="text-center">
+                      <span class="badge {% if ul_prb >= 80 %}bg-danger{% elif ul_prb >= 60 %}bg-warning{% else %}bg-success{% endif %}">
+                        {{ "%.2f"|format(ul_prb) }}%
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge {% if dl_prb >= 80 %}bg-danger{% elif dl_prb >= 60 %}bg-warning{% else %}bg-success{% endif %}">
+                        {{ "%.2f"|format(dl_prb) }}%
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <strong class="{% if max_prb >= 80 %}text-danger{% elif max_prb >= 60 %}text-warning{% else %}text-success{% endif %}">
+                        {{ "%.2f"|format(max_prb) }}%
+                      </strong>
+                    </td>
+                    <td class="text-center">{{ "%.2f"|format(row.wireless_connect_rate or 0) }}%</td>
+                    <td class="text-center">{{ "%.2f"|format(row.ho_success_rate or 0) }}%</td>
+                    <td class="text-center">{{ "%.2f"|format(row.erab_drop_rate or 0) }}%</td>
+                    <td class="text-center">
+                      <span class="badge bg-info">{{ "%.2f"|format(traffic_value) }} {{ traffic_unit }}</span>
+                    </td>
+                    <td class="text-center">{{ row.rrc_users or 0 }}</td>
+                    <td class="text-center">
+                      <span class="badge bg-secondary">{{ "%.2f"|format(voice_value) }} {{ voice_unit }}</span>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card-footer bg-light text-muted small">
+            <i class="bi bi-info-circle me-1"></i>
+            提示：PRB利用率 <span class="badge bg-success">绿色</span> &lt;60%，
+            <span class="badge bg-warning">黄色</span> 60-80%，
+            <span class="badge bg-danger">红色</span> ≥80%
+          </div>
+        </div>
+        {% endif %}
+        
+        <!-- 5G查询结果表 -->
+        {% if data_5g|length > 0 %}
+        <div class="card border-primary mb-4">
+          <div class="card-header bg-primary bg-opacity-10 border-primary d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold text-primary">
+              <i class="bi bi-5-circle-fill me-2"></i>5G小区查询结果
+              <span class="badge bg-primary ms-2">{{ data_5g|length }} 条记录</span>
+            </h6>
+            <a class="btn btn-sm btn-success" href="{{ url_for('export.export_cell_data') }}?cell_cgi={{ cell_cgi }}&cell_network=5G&start_time={{ start_time }}&end_time={{ end_time }}&granularity={{ granularity }}&query_type={{ query_type }}{% if selected_scenario_ids %}&scenario_ids={{ selected_scenario_ids|join('&scenario_ids=') }}{% endif %}">
+              <i class="bi bi-download me-1"></i> 导出数据
+            </a>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+              <table class="table table-hover table-striped mb-0">
+                <thead class="table-primary sticky-top">
+                  <tr>
+                    <th class="text-center" style="min-width: 150px;">
+                      <i class="bi bi-clock me-1"></i>时间
+                    </th>
+                    <th class="text-center" style="min-width: 180px;">
+                      <i class="bi bi-pin-map me-1"></i>小区CGI
+                    </th>
+                    <th class="text-center" style="min-width: 200px;">
+                      <i class="bi bi-building me-1"></i>小区名
+                    </th>
+                    <th class="text-center" style="min-width: 100px;">
+                      <i class="bi bi-reception-4 me-1"></i>干扰
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-arrow-up-circle me-1"></i>上行PRB%
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-arrow-down-circle me-1"></i>下行PRB%
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-speedometer2 me-1"></i>最大PRB%
+                    </th>
+                    <th class="text-center" style="min-width: 140px;">
+                      <i class="bi bi-check-circle me-1"></i>无线接通率%
+                    </th>
+                    <th class="text-center" style="min-width: 140px;">
+                      <i class="bi bi-arrow-right-circle me-1"></i>切换成功率%
+                    </th>
+                    <th class="text-center" style="min-width: 140px;">
+                      <i class="bi bi-x-circle me-1"></i>无线掉线率%
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-hdd-network me-1"></i>流量
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-people me-1"></i>RRC用户数
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-telephone me-1"></i>话务量
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in data_5g %}
+                  {% set traffic_gb = row.total_traffic|float %}
+                  {% set use_tb = traffic_gb >= 1024 %}
+                  {% set traffic_value = (traffic_gb / 1024) if use_tb else traffic_gb %}
+                  {% set traffic_unit = 'TB' if use_tb else 'GB' %}
+                  {% set ul_prb = row.ul_prb_utilization|float if row.ul_prb_utilization else 0 %}
+                  {% set dl_prb = row.dl_prb_utilization|float if row.dl_prb_utilization else 0 %}
+                  {% set max_prb = ul_prb if ul_prb > dl_prb else dl_prb %}
+                  {% set voice_erl = row.voice_erl|float if row.voice_erl else 0 %}
+                  {% set use_wan_erl = voice_erl >= 10000 %}
+                  {% set voice_value = (voice_erl / 10000) if use_wan_erl else voice_erl %}
+                  {% set voice_unit = '万Erl' if use_wan_erl else 'Erl' %}
+                  <tr>
+                    <td class="text-center">{{ row.start_time }}</td>
+                    <td class="text-center"><code class="text-primary">{{ row.cgi or row.cell_id or '-' }}</code></td>
+                    <td class="text-center">{{ row.cellname or '-' }}</td>
+                    <td class="text-center">{{ "%.2f"|format(row.interference or 0) }}</td>
+                    <td class="text-center">
+                      <span class="badge {% if ul_prb >= 80 %}bg-danger{% elif ul_prb >= 60 %}bg-warning{% else %}bg-success{% endif %}">
+                        {{ "%.2f"|format(ul_prb) }}%
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge {% if dl_prb >= 80 %}bg-danger{% elif dl_prb >= 60 %}bg-warning{% else %}bg-success{% endif %}">
+                        {{ "%.2f"|format(dl_prb) }}%
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <strong class="{% if max_prb >= 80 %}text-danger{% elif max_prb >= 60 %}text-warning{% else %}text-success{% endif %}">
+                        {{ "%.2f"|format(max_prb) }}%
+                      </strong>
+                    </td>
+                    <td class="text-center">{{ "%.2f"|format(row.wireless_connect_rate or 0) }}%</td>
+                    <td class="text-center">{{ "%.2f"|format(row.ho_success_rate or 0) }}%</td>
+                    <td class="text-center">{{ "%.2f"|format(row.wireless_drop_rate_5g or 0) }}%</td>
+                    <td class="text-center">
+                      <span class="badge bg-info">{{ "%.2f"|format(traffic_value) }} {{ traffic_unit }}</span>
+                    </td>
+                    <td class="text-center">{{ row.rrc_users or 0 }}</td>
+                    <td class="text-center">
+                      <span class="badge bg-secondary">{{ "%.2f"|format(voice_value) }} {{ voice_unit }}</span>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card-footer bg-light text-muted small">
+            <i class="bi bi-info-circle me-1"></i>
+            提示：PRB利用率 <span class="badge bg-success">绿色</span> &lt;60%，
+            <span class="badge bg-warning">黄色</span> 60-80%，
+            <span class="badge bg-danger">红色</span> ≥80%
+          </div>
+        </div>
+        {% endif %}
+        
+        <!-- 如果只有一种制式，显示原来的单一表格 -->
+        {% if data_4g|length == 0 and data_5g|length == 0 and cell_data|length > 0 %}
+        <!-- 查询结果 -->
+        <div class="card border-primary">
+          <div class="card-header bg-primary bg-opacity-10 border-primary d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold text-primary">
+              <i class="bi bi-table me-2"></i>查询结果
+              <span class="badge bg-primary ms-2">{{ cell_data|length }} 条记录</span>
+            </h6>
+            <a class="btn btn-sm btn-success" href="{{ url_for('export.export_cell_data') }}?cell_cgi={{ cell_cgi }}&cell_network={{ cell_network }}&start_time={{ start_time }}&end_time={{ end_time }}&granularity={{ granularity }}&query_type={{ query_type }}{% if selected_scenario_ids %}&scenario_ids={{ selected_scenario_ids|join('&scenario_ids=') }}{% endif %}">
+              <i class="bi bi-download me-1"></i> 导出数据
+            </a>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+              <table class="table table-hover table-striped mb-0">
+                <thead class="table-primary sticky-top">
+                  <tr>
+                    <th class="text-center" style="min-width: 150px;">
+                      <i class="bi bi-clock me-1"></i>时间
+                    </th>
+                    <th class="text-center" style="min-width: 180px;">
+                      <i class="bi bi-pin-map me-1"></i>小区CGI
+                    </th>
+                    <th class="text-center" style="min-width: 200px;">
+                      <i class="bi bi-building me-1"></i>小区名
+                    </th>
+                    <th class="text-center" style="min-width: 100px;">
+                      <i class="bi bi-reception-4 me-1"></i>干扰
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-arrow-up-circle me-1"></i>上行PRB%
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-arrow-down-circle me-1"></i>下行PRB%
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-speedometer2 me-1"></i>最大PRB%
+                    </th>
+                    <th class="text-center" style="min-width: 140px;">
+                      <i class="bi bi-check-circle me-1"></i>无线接通率%
+                    </th>
+                    <th class="text-center" style="min-width: 140px;">
+                      <i class="bi bi-arrow-right-circle me-1"></i>切换成功率%
+                    </th>
+                    <th class="text-center" style="min-width: 140px;">
+                      <i class="bi bi-x-circle me-1"></i>掉线率%
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-hdd-network me-1"></i>流量
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-people me-1"></i>RRC用户数
+                    </th>
+                    <th class="text-center" style="min-width: 120px;">
+                      <i class="bi bi-telephone me-1"></i>话务量
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in cell_data %}
+                  {% set traffic_gb = row.total_traffic|float %}
+                  {% set use_tb = traffic_gb >= 1024 %}
+                  {% set traffic_value = (traffic_gb / 1024) if use_tb else traffic_gb %}
+                  {% set traffic_unit = 'TB' if use_tb else 'GB' %}
+                  {% set ul_prb = row.ul_prb_utilization|float if row.ul_prb_utilization else 0 %}
+                  {% set dl_prb = row.dl_prb_utilization|float if row.dl_prb_utilization else 0 %}
+                  {% set max_prb = ul_prb if ul_prb > dl_prb else dl_prb %}
+                  {% set voice_erl = row.voice_erl|float if row.voice_erl else 0 %}
+                  {% set use_wan_erl = voice_erl >= 10000 %}
+                  {% set voice_value = (voice_erl / 10000) if use_wan_erl else voice_erl %}
+                  {% set voice_unit = '万Erl' if use_wan_erl else 'Erl' %}
+                  <tr>
+                    <td class="text-center">{{ row.start_time }}</td>
+                    <td class="text-center"><code class="text-primary">{{ row.cgi or row.cell_id or '-' }}</code></td>
+                    <td class="text-center">{{ row.cellname or '-' }}</td>
+                    <td class="text-center">{{ "%.2f"|format(row.interference or 0) }}</td>
+                    <td class="text-center">
+                      <span class="badge {% if ul_prb >= 80 %}bg-danger{% elif ul_prb >= 60 %}bg-warning{% else %}bg-success{% endif %}">
+                        {{ "%.2f"|format(ul_prb) }}%
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge {% if dl_prb >= 80 %}bg-danger{% elif dl_prb >= 60 %}bg-warning{% else %}bg-success{% endif %}">
+                        {{ "%.2f"|format(dl_prb) }}%
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <strong class="{% if max_prb >= 80 %}text-danger{% elif max_prb >= 60 %}text-warning{% else %}text-success{% endif %}">
+                        {{ "%.2f"|format(max_prb) }}%
+                      </strong>
+                    </td>
+                    <td class="text-center">{{ "%.2f"|format(row.wireless_connect_rate or 0) }}%</td>
+                    <td class="text-center">{{ "%.2f"|format(row.ho_success_rate or 0) }}%</td>
+                    <td class="text-center">
+                      {% if row.erab_drop_rate %}{{ "%.2f"|format(row.erab_drop_rate or 0) }}%
+                      {% elif row.wireless_drop_rate_5g %}{{ "%.2f"|format(row.wireless_drop_rate_5g or 0) }}%
+                      {% else %}{{ "%.2f"|format(row.wireless_drop_rate or 0) }}%
+                      {% endif %}
+                    </td>
+                    <td class="text-center">
+                      <span class="badge bg-info">{{ "%.2f"|format(traffic_value) }} {{ traffic_unit }}</span>
+                    </td>
+                    <td class="text-center">{{ row.rrc_users or 0 }}</td>
+                    <td class="text-center">
+                      <span class="badge bg-secondary">{{ "%.2f"|format(voice_value) }} {{ voice_unit }}</span>
+                    </td>
+                  </tr>
+                  {% else %}
+                  <tr><td colspan="13" class="text-center text-muted py-4">暂无数据</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card-footer bg-light text-muted small">
+            <i class="bi bi-info-circle me-1"></i>
+            提示：PRB利用率 <span class="badge bg-success">绿色</span> &lt;60%，
+            <span class="badge bg-warning">黄色</span> 60-80%，
+            <span class="badge bg-danger">红色</span> ≥80%
+          </div>
+        </div>
+        {% elif cell_cgi %}
+        <hr class="my-4">
+        <div class="alert alert-warning d-flex align-items-center" role="alert">
+          <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+          <div>
+            <h6 class="alert-heading mb-1">未查询到数据</h6>
+            <p class="mb-0">请确认以下信息是否正确：</p>
+            <ul class="mb-0 mt-2">
+              <li>小区CGI格式是否正确</li>
+              <li>制式（4G/5G）选择是否正确</li>
+              <li>时间范围内是否有数据</li>
+            </ul>
+          </div>
+        </div>
+        {% endif %}
+        {% elif cell_cgi %}
+        <hr class="my-4">
+        <div class="alert alert-warning d-flex align-items-center" role="alert">
+          <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+          <div>
+            <h6 class="alert-heading mb-1">未查询到数据</h6>
+            <p class="mb-0">请确认以下信息是否正确：</p>
+            <ul class="mb-0 mt-2">
+              <li>小区CGI格式是否正确</li>
+              <li>制式（4G/5G）选择是否正确</li>
+              <li>时间范围内是否有数据</li>
+            </ul>
+          </div>
+        </div>
+        {% endif %}
+        </div>
+        <!-- 查询结果容器结束 -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 确保DOM加载完成后再执行
+(function() {
+  'use strict';
+  
+  // 初始化查询方式显示/隐藏逻辑
+  function initQueryMethodLogic() {
+    const queryMethod = document.getElementById('queryMethod');
+    const scenarioSection = document.getElementById('scenarioSection');
+    const cgiSection = document.getElementById('cgiSection');
+    
+    // 根据当前选择更新显示状态
+    function updateSections() {
+      if (queryMethod.value === 'scenario') {
+        // 选择场景，显示场景选择器，隐藏CGI输入框
+        scenarioSection.style.display = 'block';
+        cgiSection.style.display = 'none';
+      } else {
+        // 输入CGI，显示CGI输入框，隐藏场景选择器
+        scenarioSection.style.display = 'none';
+        cgiSection.style.display = 'block';
+      }
+    }
+    
+    // 初始更新
+    updateSections();
+    
+    // 绑定变更事件
+    queryMethod.addEventListener('change', updateSections);
+  }
+  
+// 局部刷新查询结果
+async function submitCellQuery(e) {
+  e.preventDefault();
+  
+  const queryMethod = document.getElementById('queryMethod').value;
+  
+  // 根据查询方式验证
+  if (queryMethod === 'cgi') {
+    // 验证小区CGI数量
+    const cellCgiInput = document.querySelector('textarea[name="cell_cgi"]');
+    const cellCgis = cellCgiInput.value.split(',').map(c => c.trim()).filter(c => c);
+    
+    if (cellCgis.length > 200) {
+      alert('⚠️ 最多只能输入200个小区CGI\n当前输入了 ' + cellCgis.length + ' 个\n\n请减少输入数量后重试。');
+      return false;
+    }
+    
+    if (cellCgis.length === 0) {
+      alert('⚠️ 请至少输入一个小区CGI');
+      return false;
+    }
+  } else if (queryMethod === 'scenario') {
+    // 验证场景选择
+    const scenarioSelect = document.querySelector('select[name="scenario_ids"]');
+    const selectedScenarios = Array.from(scenarioSelect.selectedOptions).filter(option => option.value && option.value !== '');
+    
+    if (selectedScenarios.length === 0) {
+      alert('⚠️ 请至少选择一个场景');
+      return false;
+    }
+  }
+  
+  const form = document.getElementById('cellQueryForm');
+  const formData = new FormData(form);
+  const params = new URLSearchParams(formData);
+  
+  const queryBtn = document.getElementById('queryBtn');
+  const originalHtml = queryBtn.innerHTML;
+  queryBtn.disabled = true;
+  queryBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>查询中...';
+  
+  try {
+    const response = await fetch(`/api/cell/query?${params.toString()}`);
+    const result = await response.json();
+    
+    if (result.success && result.html) {
+      // 清除之前的错误信息
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => {
+        if (alert.textContent.includes('请至少输入一个小区CGI')) {
+          alert.remove();
+        }
+      });
+      
+      // 更新结果容器
+      document.getElementById('queryResultsContainer').innerHTML = result.html;
+      console.log('✅ 查询结果已更新');
+    } else {
+      console.error('❌ 查询失败:', result.error || '未知错误');
+      alert('查询失败：' + (result.error || '未知错误'));
+    }
+  } catch (error) {
+    console.error('❌ 查询请求失败:', error);
+    alert('查询请求失败，请检查网络连接');
+  } finally {
+    queryBtn.disabled = false;
+    queryBtn.innerHTML = originalHtml;
+  }
+}
+
+// 初始化
+initQueryMethodLogic();
+
+// 绑定表单提交事件
+document.getElementById('cellQueryForm').addEventListener('submit', submitCellQuery);
+
+})(); // 立即执行函数结束
+</script>
+{% endblock %}
+

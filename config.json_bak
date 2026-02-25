@@ -1,0 +1,81 @@
+{
+    "pgsql_config": {
+        "host": "188.15.68.62",
+        "port": 54326,
+        "database": "data_wg",
+        "user": "postgres",
+        "password": "10300"
+    },
+    "mysql_config": {
+        "host": "188.15.67.198",
+        "port": 50014,
+        "database": "optimization_toolbox",
+        "user": "root",
+        "password": "10300"
+    },
+    "streamlit_config": {
+        "port": 8808,
+        "server_address": "0.0.0.0"
+    },
+    "transfer_config": {
+        "enable_raw_to_metrics": true,
+        "skip_if_pg_has_data": true,
+        "check_data_hours": 1
+    },
+    "auth_config": {
+        "enable_auth": true,
+        "session_lifetime_hours": 24,
+		"session_timeout_hours":1 ,
+		"admin_access": {
+            "enable_ip_whitelist": true,
+            "global_admin_ips": ["188.15.0.0/16", "192.168.0.0/16", "10.0.0.0/8"]
+        },
+        "users": {
+            "admin": {
+                "password_hash": "scrypt:32768:8:1$NOvyjCoPqWB3YNDB$39cd39ca69d691febffb129adb2fc526ca0ad83a151ff83fea080890ce90be764590e1a909e881034062f2f7f2456731bb877ea75cb30dbea52e136a7428dc48",
+                "role": "admin",
+                 "name": "系统管理员",
+                "allowed_ips": ["188.15.68.92"]
+            },
+            "user": {
+                "password_hash": "scrypt:32768:8:1$j0Dq75DzHV0Ro92p$f766b8feeafc2e3666f4afa0ff8170810fc842e29533051ef4a68f7b9fbf700394a692aef7e3be0682622372937acf92990f442972a2fe598a7ce00eb670db91",
+                "role": "user",
+                "name": "普通用户",
+				 "allowed_ips": [],
+                "allowed_pages": [
+                    "cell",
+                    "grid",
+                    "alarm",
+                    "alarm_nokia"
+                ]
+            },
+            "test1": {
+                "password_hash": "pbkdf2:sha256:600000$s2VYmsXmUjSgoOE2$81122a7c024608959909d7e4e0b88ec3da00a2a14c211556d951845ea859cdd8",
+                "role": "user",
+                "name": "test1",
+				 "allowed_ips": [],
+                "allowed_pages": [
+                    "dashboard",
+                    "monitor",
+                    "cell",
+                    "scenarios",
+                    "grid",
+                    "alarm",
+                    "alarm_nokia"
+                ]
+            },
+            "jiankong": {
+                "password_hash": "scrypt:32768:8:1$9svp6I4oBlsOKOAP$94e772f56f54306b7ac2d049bfbf79acbae09dd120a70654b059f632c0d7513f2f2a747eb9b22b767a7ffabcaecea623edc2f53b0726c3b8dad91e2df3eb070e",
+                "role": "user",
+                "name": "jiankong",
+				 "allowed_ips": [],
+                "allowed_pages": [
+                    "dashboard",
+                    "monitor",
+                    "cell",
+                    "scenarios"
+                ]
+            }
+        }
+    }
+}

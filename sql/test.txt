@@ -1,0 +1,637 @@
+Microsoft Windows [版本 10.0.17763.737]
+(c) 2018 Microsoft Corporation。保留所有权利。
+
+C:\Users\Administrator>d:
+
+D:\>cd D:\AutoTools\corba_parser_2026\monitor_app\
+
+D:\AutoTools\corba_parser_2026\monitor_app>python test_hsr_traffic_fix.py
+2026-02-03 10:54:38,418 - __main__ - INFO - 开始测试高铁健康检查流量匹配修复效果
+2026-02-03 10:54:38,418 - __main__ - INFO - 初始化数据库客户端...
+2026-02-03 10:54:38,420 - __main__ - INFO - MySQL配置: {'host': '188.15.67.198', 'port': 50014, 'database': 'optimization_toolbox', 'user': 'root', 'password': '******'}
+2026-02-03 10:54:38,421 - __main__ - INFO - PostgreSQL配置: {'host': '188.15.68.62', 'port': 54326, 'database': 'data_wg', 'user': 'postgres', 'password': '******', 'pool_min': 1, 'pool_max': 10, 'connect_timeout': 10, 'application_name': 'monitoring_app'}
+2026-02-03 10:54:38,547 - db.mysql - INFO - MySQL 连接成功: 188.15.67.198:50014/optimization_toolbox
+2026-02-03 10:54:38,548 - __main__ - INFO - MySQL客户端初始化成功
+2026-02-03 10:54:38,549 - __main__ - INFO - MySQL连接测试成功: {'1': 1}
+2026-02-03 10:54:38,731 - __main__ - INFO - PostgreSQL客户端初始化成功
+2026-02-03 10:54:38,734 - __main__ - INFO - PostgreSQL连接测试成功: {'?column?': 1}
+2026-02-03 10:54:38,734 - __main__ - INFO - 创建高铁健康检查服务实例...
+2026-02-03 10:54:38,734 - __main__ - INFO - 运行高铁健康检查...
+2026-02-03 10:54:38,978 - db.pg - ERROR - PostgreSQL 查询失败 (耗时 7.00ms): 错误:  字段 "pdcp_upoctul" 不存在
+LINE 4:                                 MAX((COALESCE(PDCP_UpOctUl, ...
+                                                      ^
+
+SQL:
+                            SELECT
+                                cgi,
+                                MAX((COALESCE(PDCP_UpOctUl, 0) + COALESCE(PDCP_UpOctDl, 0)) / 1024 / 1024 / 1024) as traffic
+
+Traceback (most recent call last):
+  File "D:\AutoTools\corba_parser_2026\monitor_app\db\pg.py", line 117, in fetch_all
+    cur.execute(sql, params or ())
+  File "C:\Program Files\Python310\lib\site-packages\psycopg2\extras.py", line 236, in execute
+    return super().execute(query, vars)
+psycopg2.errors.UndefinedColumn: 错误:  字段 "pdcp_upoctul" 不存在
+LINE 4:                                 MAX((COALESCE(PDCP_UpOctUl, ...
+                                                      ^
+
+2026-02-03 10:54:38,981 - services.hsr_health_check - WARNING - 查询4G性能数据失败: 错误:  字段 "pdcp_upoctul" 不存在
+LINE 4:                                 MAX((COALESCE(PDCP_UpOctUl, ...
+                                                      ^
+
+2026-02-03 10:54:38,987 - db.pg - ERROR - PostgreSQL 查询失败 (耗时 3.00ms): 错误:  字段 "ncgi" 不存在
+LINE 3:                                 Ncgi as cgi,
+                                        ^
+HINT:  也许您想要引用列"cell_5g_metrics.Ncgi"。
+
+SQL:
+                            SELECT
+                                Ncgi as cgi,
+                                MAX((COALESCE(RLC_UpOctUl, 0) + COALESCE(RLC_UpOctDl, 0)) / 1024 / 1024 / 1024) as tra
+Traceback (most recent call last):
+  File "D:\AutoTools\corba_parser_2026\monitor_app\db\pg.py", line 117, in fetch_all
+    cur.execute(sql, params or ())
+  File "C:\Program Files\Python310\lib\site-packages\psycopg2\extras.py", line 236, in execute
+    return super().execute(query, vars)
+psycopg2.errors.UndefinedColumn: 错误:  字段 "ncgi" 不存在
+LINE 3:                                 Ncgi as cgi,
+                                        ^
+HINT:  也许您想要引用列"cell_5g_metrics.Ncgi"。
+
+2026-02-03 10:54:38,989 - services.hsr_health_check - WARNING - 查询5G性能数据失败: 错误:  字段 "ncgi" 不存在
+LINE 3:                                 Ncgi as cgi,
+                                        ^
+HINT:  也许您想要引用列"cell_5g_metrics.Ncgi"。
+
+2026-02-03 10:54:38,994 - db.pg - ERROR - PostgreSQL 查询失败 (耗时 5.00ms): 错误:  字段 "pdcp_upoctul" 不存在
+LINE 4:                                 MAX((COALESCE(PDCP_UpOctUl, ...
+                                                      ^
+
+SQL:
+                            SELECT
+                                cgi,
+                                MAX((COALESCE(PDCP_UpOctUl, 0) + COALESCE(PDCP_UpOctDl, 0)) / 1024 / 1024 / 1024) as traffic
+
+Traceback (most recent call last):
+  File "D:\AutoTools\corba_parser_2026\monitor_app\db\pg.py", line 117, in fetch_all
+    cur.execute(sql, params or ())
+  File "C:\Program Files\Python310\lib\site-packages\psycopg2\extras.py", line 236, in execute
+    return super().execute(query, vars)
+psycopg2.errors.UndefinedColumn: 错误:  字段 "pdcp_upoctul" 不存在
+LINE 4:                                 MAX((COALESCE(PDCP_UpOctUl, ...
+                                                      ^
+
+2026-02-03 10:54:38,996 - services.hsr_health_check - WARNING - 查询4G性能数据失败: 错误:  字段 "pdcp_upoctul" 不存在
+LINE 4:                                 MAX((COALESCE(PDCP_UpOctUl, ...
+                                                      ^
+
+2026-02-03 10:54:38,999 - db.pg - ERROR - PostgreSQL 查询失败 (耗时 3.00ms): 错误:  字段 "ncgi" 不存在
+LINE 3:                                 Ncgi as cgi,
+                                        ^
+HINT:  也许您想要引用列"cell_5g_metrics.Ncgi"。
+
+SQL:
+                            SELECT
+                                Ncgi as cgi,
+                                MAX((COALESCE(RLC_UpOctUl, 0) + COALESCE(RLC_UpOctDl, 0)) / 1024 / 1024 / 1024) as tra
+Traceback (most recent call last):
+  File "D:\AutoTools\corba_parser_2026\monitor_app\db\pg.py", line 117, in fetch_all
+    cur.execute(sql, params or ())
+  File "C:\Program Files\Python310\lib\site-packages\psycopg2\extras.py", line 236, in execute
+    return super().execute(query, vars)
+psycopg2.errors.UndefinedColumn: 错误:  字段 "ncgi" 不存在
+LINE 3:                                 Ncgi as cgi,
+                                        ^
+HINT:  也许您想要引用列"cell_5g_metrics.Ncgi"。
+
+2026-02-03 10:54:39,001 - services.hsr_health_check - WARNING - 查询5G性能数据失败: 错误:  字段 "ncgi" 不存在
+LINE 3:                                 Ncgi as cgi,
+                                        ^
+HINT:  也许您想要引用列"cell_5g_metrics.Ncgi"。
+
+2026-02-03 10:54:39,004 - db.pg - ERROR - PostgreSQL 查询失败 (耗时 3.00ms): 错误:  字段 "pdcp_upoctul" 不存在
+LINE 4:                                 MAX((COALESCE(PDCP_UpOctUl, ...
+                                                      ^
+
+SQL:
+                            SELECT
+                                cgi,
+                                MAX((COALESCE(PDCP_UpOctUl, 0) + COALESCE(PDCP_UpOctDl, 0)) / 1024 / 1024 / 1024) as traffic
+
+Traceback (most recent call last):
+  File "D:\AutoTools\corba_parser_2026\monitor_app\db\pg.py", line 117, in fetch_all
+    cur.execute(sql, params or ())
+  File "C:\Program Files\Python310\lib\site-packages\psycopg2\extras.py", line 236, in execute
+    return super().execute(query, vars)
+psycopg2.errors.UndefinedColumn: 错误:  字段 "pdcp_upoctul" 不存在
+LINE 4:                                 MAX((COALESCE(PDCP_UpOctUl, ...
+                                                      ^
+
+2026-02-03 10:54:39,006 - services.hsr_health_check - WARNING - 查询4G性能数据失败: 错误:  字段 "pdcp_upoctul" 不存在
+LINE 4:                                 MAX((COALESCE(PDCP_UpOctUl, ...
+                                                      ^
+
+2026-02-03 10:54:39,010 - db.pg - ERROR - PostgreSQL 查询失败 (耗时 4.00ms): 错误:  字段 "ncgi" 不存在
+LINE 3:                                 Ncgi as cgi,
+                                        ^
+HINT:  也许您想要引用列"cell_5g_metrics.Ncgi"。
+
+SQL:
+                            SELECT
+                                Ncgi as cgi,
+                                MAX((COALESCE(RLC_UpOctUl, 0) + COALESCE(RLC_UpOctDl, 0)) / 1024 / 1024 / 1024) as tra
+Traceback (most recent call last):
+  File "D:\AutoTools\corba_parser_2026\monitor_app\db\pg.py", line 117, in fetch_all
+    cur.execute(sql, params or ())
+  File "C:\Program Files\Python310\lib\site-packages\psycopg2\extras.py", line 236, in execute
+    return super().execute(query, vars)
+psycopg2.errors.UndefinedColumn: 错误:  字段 "ncgi" 不存在
+LINE 3:                                 Ncgi as cgi,
+                                        ^
+HINT:  也许您想要引用列"cell_5g_metrics.Ncgi"。
+
+2026-02-03 10:54:39,011 - services.hsr_health_check - WARNING - 查询5G性能数据失败: 错误:  字段 "ncgi" 不存在
+LINE 3:                                 Ncgi as cgi,
+                                        ^
+HINT:  也许您想要引用列"cell_5g_metrics.Ncgi"。
+
+2026-02-03 10:54:39,530 - db.mysql - INFO -       ├─ MySQL查询: 507.76ms, 返回 9085 行
+2026-02-03 10:54:39,629 - services.hsr_health_check - INFO - 获取到 650 条中兴影响性能的告警
+2026-02-03 10:54:39,782 - services.hsr_health_check - INFO - 成功处理 650 条中兴告警，匹配到 43 个小区
+2026-02-03 10:54:39,835 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672946-1, cell_rru_id=53, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:39,836 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672946-1, cell_rru_id=52, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:39,837 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672946-1, cell_rru_id=51, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:39,838 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672946-1, cell_rru_id=54, alarm=超级小区CP退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:39,838 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672946-1, cell_rru_id=54, alarm= 超级小区CP退服
+2026-02-03 10:54:39,840 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672946-1, cell_rru_id=57, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:39,841 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672946-1, cell_rru_id=55, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:39,842 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672946-1, cell_rru_id=56, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:39,965 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=True
+2026-02-03 10:54:39,965 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829487-170, cell_rru_id=52, alarm=RRU链路断
+2026-02-03 10:54:39,967 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,968 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,969 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=True
+2026-02-03 10:54:39,969 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829487-170, cell_rru_id=51, alarm=RRU链路断
+2026-02-03 10:54:39,969 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-129, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=True
+2026-02-03 10:54:39,970 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829487-129, cell_rru_id=52, alarm=RRU链路断
+2026-02-03 10:54:39,971 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-129, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,971 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-130, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,972 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-130, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=True
+2026-02-03 10:54:39,973 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829487-130, cell_rru_id=51, alarm=RRU链路断
+2026-02-03 10:54:39,973 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-130, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=True
+2026-02-03 10:54:39,974 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829487-130, cell_rru_id=52, alarm=RRU链路断
+2026-02-03 10:54:39,974 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-130, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,975 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-129, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,978 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-129, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=True
+2026-02-03 10:54:39,978 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829487-129, cell_rru_id=51, alarm=RRU链路断
+2026-02-03 10:54:39,979 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,980 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=True
+2026-02-03 10:54:39,981 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672931-1, cell_rru_id=51, alarm=RRU链路断
+2026-02-03 10:54:39,982 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=51, alarm=超级小区CP退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:39,983 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672931-1, cell_rru_id=51, alarm= 超级小区CP退服
+2026-02-03 10:54:39,984 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=51, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:39,984 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=True
+2026-02-03 10:54:39,985 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672931-1, cell_rru_id=52, alarm=RRU链路断
+2026-02-03 10:54:39,985 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,986 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=52, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:39,989 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=52, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:39,989 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-129, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,990 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-129, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,991 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-129, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,991 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-129, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,992 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-130, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,992 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-130, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,993 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-130, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,993 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-130, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,994 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,995 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,995 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,996 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,997 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:39,997 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,000 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=54, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,000 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=54, alarm=超级小区CP退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,001 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672931-1, cell_rru_id=54, alarm= 超级小区CP退服
+2026-02-03 10:54:40,002 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,002 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,003 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=53, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,004 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=53, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,005 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,005 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,006 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,006 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,008 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,010 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,011 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=56, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,012 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=56, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,013 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,014 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,014 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=55, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,015 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=55, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,017 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=58, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,018 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=58, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,018 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=57, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,021 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829487-170, cell_rru_id=57, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,022 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=58, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,022 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=58, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,023 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=58, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,023 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=58, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,024 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=57, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,024 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=57, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,025 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=57, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,026 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672931-1, cell_rru_id=57, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,041 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-169, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,042 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-169, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,044 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-129, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,044 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-129, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,045 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-130, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,046 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-130, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,047 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672955-1, cell_rru_id=52, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,047 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672955-1, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,048 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672955-1, cell_rru_id=51, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,048 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672955-1, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,049 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-130, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,049 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-830985-130, cell_rru_id=56, alarm=RRU链路断
+2026-02-03 10:54:40,050 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-130, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,051 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-130, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,051 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-129, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,054 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-129, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,055 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-129, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,055 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-830985-129, cell_rru_id=56, alarm=RRU链路断
+2026-02-03 10:54:40,056 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-169, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,057 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-169, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,057 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-169, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,058 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-830985-169, cell_rru_id=56, alarm=RRU链路断
+2026-02-03 10:54:40,058 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672955-1, cell_rru_id=54, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,059 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672955-1, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,060 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672955-1, cell_rru_id=56, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,060 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672955-1, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,060 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672955-1, cell_rru_id=56, alarm=RRU链路断
+2026-02-03 10:54:40,061 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672955-1, cell_rru_id=53, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,061 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672955-1, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,062 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-169, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,065 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-130, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,065 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830985-129, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,066 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672955-1, cell_rru_id=55, alarm=超级小区CP退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,066 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672955-1, cell_rru_id=55, alarm= 超级小区CP退服
+2026-02-03 10:54:40,067 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672955-1, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=56, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,068 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-130, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,068 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829611-130, cell_rru_id=51, alarm=RRU链路断
+2026-02-03 10:54:40,068 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-130, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,068 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-129, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,069 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829611-129, cell_rru_id=51, alarm=RRU链路断
+2026-02-03 10:54:40,069 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-129, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,071 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-169, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,071 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829611-169, cell_rru_id=51, alarm=RRU链路断
+2026-02-03 10:54:40,072 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-169, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,076 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672934-1, cell_rru_id=52, alarm=超级小区CP退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,076 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672934-1, cell_rru_id=52, alarm= 超级小区CP退服
+2026-02-03 10:54:40,077 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672934-1, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,078 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672934-1, cell_rru_id=51, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,078 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672934-1, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,079 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672934-1, cell_rru_id=51, alarm=RRU链路断
+2026-02-03 10:54:40,079 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-169, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,080 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-130, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,081 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-129, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,081 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672934-1, cell_rru_id=54, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,082 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672934-1, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,082 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-130, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,083 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-130, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,084 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-129, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,084 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-129, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,087 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-129, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,088 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-130, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,088 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-169, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,089 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-169, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,090 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829611-169, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,090 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672934-1, cell_rru_id=56, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,090 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672934-1, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,091 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672934-1, cell_rru_id=55, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,092 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672934-1, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,093 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672934-1, cell_rru_id=53, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,093 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672934-1, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,113 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829534-132, cell_rru_id=57, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,113 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829534-132, cell_rru_id=57, alarm=RRU链路断
+2026-02-03 10:54:40,115 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829534-131, cell_rru_id=57, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,115 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829534-131, cell_rru_id=57, alarm=RRU链路断
+2026-02-03 10:54:40,116 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829534-169, cell_rru_id=57, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,117 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829534-169, cell_rru_id=57, alarm=RRU链路断
+2026-02-03 10:54:40,117 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829534-169, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,118 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829534-169, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,119 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=52, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,119 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=52, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,120 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,120 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=51, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,121 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=51, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,121 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,122 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=57, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,123 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=57, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,126 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=57, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,126 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672935-1, cell_rru_id=57, alarm=RRU链路断
+2026-02-03 10:54:40,129 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829534-169, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,130 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829534-169, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,131 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829534-169, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,131 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829534-169, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,133 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=56, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,133 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=56, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,134 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,135 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=53, alarm=超级小区CP退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,138 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672935-1, cell_rru_id=53, alarm= 超级小区CP退服
+2026-02-03 10:54:40,138 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=53, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,139 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,139 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=54, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,140 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=54, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,141 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,142 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=55, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,142 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=55, alarm=超级小区CP退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,142 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672935-1, cell_rru_id=55, alarm= 超级小区CP退服
+2026-02-03 10:54:40,143 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672935-1, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,144 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-169, cell_rru_id=54, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,144 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-130, cell_rru_id=54, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,145 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-129, cell_rru_id=54, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,146 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672936-1, cell_rru_id=54, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,146 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-129, cell_rru_id=51, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,150 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-130, cell_rru_id=51, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,150 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-169, cell_rru_id=51, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,151 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-169, cell_rru_id=52, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,152 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-129, cell_rru_id=52, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,152 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-130, cell_rru_id=52, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,153 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-130, cell_rru_id=53, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,153 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829456-130, cell_rru_id=53, alarm= 天馈驻波比异常
+2026-02-03 10:54:40,154 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-129, cell_rru_id=53, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,154 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829456-129, cell_rru_id=53, alarm= 天馈驻波比异常
+2026-02-03 10:54:40,155 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-169, cell_rru_id=53, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,156 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829456-169, cell_rru_id=53, alarm= 天馈驻波比异常
+2026-02-03 10:54:40,156 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672936-1, cell_rru_id=53, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,157 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672936-1, cell_rru_id=53, alarm= 天馈驻波比异常
+2026-02-03 10:54:40,160 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672936-1, cell_rru_id=51, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,161 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672936-1, cell_rru_id=52, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,161 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-169, cell_rru_id=56, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,163 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-169, cell_rru_id=55, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,163 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-130, cell_rru_id=56, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,164 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-130, cell_rru_id=55, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,164 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-129, cell_rru_id=56, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,165 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829456-129, cell_rru_id=55, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,166 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672936-1, cell_rru_id=55, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,166 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672936-1, cell_rru_id=56, alarm=天馈驻波比异常, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,167 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-831159-130, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,167 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-831159-129, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,168 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-831159-129, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,172 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-831159-130, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,172 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-831159-169, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,173 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-831159-169, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,174 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672910-1, cell_rru_id=52, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,174 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672910-1, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,175 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672910-1, cell_rru_id=51, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,175 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672910-1, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,176 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-831159-169, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,176 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-831159-169, cell_rru_id=55, alarm=RRU链路断
+2026-02-03 10:54:40,177 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-831159-129, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,177 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-831159-129, cell_rru_id=55, alarm=RRU链路断
+2026-02-03 10:54:40,178 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-831159-130, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,178 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-831159-130, cell_rru_id=55, alarm=RRU链路断
+2026-02-03 10:54:40,181 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672910-1, cell_rru_id=55, alarm=超级小区CP退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,182 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672910-1, cell_rru_id=55, alarm= 超级小区CP退服
+2026-02-03 10:54:40,183 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672910-1, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,183 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672910-1, cell_rru_id=55, alarm=RRU链路断
+2026-02-03 10:54:40,184 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-831159-169, cell_rru_id=57, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,185 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-831159-169, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,185 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-831159-130, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,186 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-831159-129, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,187 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672910-1, cell_rru_id=57, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,187 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672910-1, cell_rru_id=57, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,188 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672910-1, cell_rru_id=56, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,188 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672910-1, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=55, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,191 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-169, cell_rru_id=54, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,193 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-169, cell_rru_id=51, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,194 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-169, cell_rru_id=52, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,194 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-169, cell_rru_id=53, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,195 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=51, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,195 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=51, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,196 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=52, alarm=超级小区CP退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,197 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672937-1, cell_rru_id=52, alarm= 超级小区CP退服
+2026-02-03 10:54:40,197 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=52, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,198 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=54, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,198 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=54, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,199 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=53, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,200 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=53, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,201 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-169, cell_rru_id=55, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,202 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=55, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,205 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=55, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,206 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-169, cell_rru_id=60, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,206 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-131, cell_rru_id=60, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,207 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-132, cell_rru_id=60, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,208 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-169, cell_rru_id=56, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,208 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=56, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,209 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=56, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,210 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=60, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,210 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=60, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,211 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-169, cell_rru_id=57, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,211 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-830110-169, cell_rru_id=57, alarm= 天馈驻波比异常
+2026-02-03 10:54:40,212 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-132, cell_rru_id=57, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,212 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-830110-132, cell_rru_id=57, alarm= 天馈驻波比异常
+2026-02-03 10:54:40,213 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-131, cell_rru_id=57, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,216 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-830110-131, cell_rru_id=57, alarm= 天馈驻波比异常
+2026-02-03 10:54:40,217 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=57, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,217 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=57, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,218 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672937-1, cell_rru_id=57, alarm= 天馈驻波比异常
+2026-02-03 10:54:40,218 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-132, cell_rru_id=58, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,219 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-132, cell_rru_id=59, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,220 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-131, cell_rru_id=58, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,221 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-131, cell_rru_id=59, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,222 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-169, cell_rru_id=58, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,223 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-830110-169, cell_rru_id=59, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,223 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=59, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,224 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=59, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,225 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=58, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,225 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672937-1, cell_rru_id=58, alarm=天馈驻波比异常, matched_rru_id=57, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,270 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672939-1, cell_rru_id=51, alarm=光模块接收光功率异常, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,270 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672939-1, cell_rru_id=51, alarm= 光模块接收光功率异常
+2026-02-03 10:54:40,272 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672939-1, cell_rru_id=52, alarm=光模块接收光功率异常, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,273 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672939-1, cell_rru_id=52, alarm= 光模块接收光功率异常
+2026-02-03 10:54:40,275 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672939-1, cell_rru_id=53, alarm=光模块接收光功率异常, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,276 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672939-1, cell_rru_id=53, alarm= 光模块接收光功率异常
+2026-02-03 10:54:40,276 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672939-1, cell_rru_id=55, alarm=光模块接收光功率异常, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,277 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672939-1, cell_rru_id=55, alarm= 光模块接收光功率异常
+2026-02-03 10:54:40,278 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672939-1, cell_rru_id=56, alarm=光模块接收光功率异常, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,278 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672939-1, cell_rru_id=56, alarm= 光模块接收光功率异常
+2026-02-03 10:54:40,303 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-129, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,303 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829868-129, cell_rru_id=52, alarm=RRU链路断
+2026-02-03 10:54:40,305 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-129, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,306 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-130, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,306 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829868-130, cell_rru_id=52, alarm=RRU链路断
+2026-02-03 10:54:40,306 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-130, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,307 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-169, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,308 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-169, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,308 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829868-169, cell_rru_id=52, alarm=RRU链路断
+2026-02-03 10:54:40,309 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672916-1, cell_rru_id=51, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,309 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672916-1, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,311 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672916-1, cell_rru_id=52, alarm=超级小区CP退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,311 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672916-1, cell_rru_id=52, alarm= 超级小区CP退服
+2026-02-03 10:54:40,312 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672916-1, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,313 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672916-1, cell_rru_id=52, alarm=RRU链路断
+2026-02-03 10:54:40,316 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-169, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,317 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-169, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,317 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-129, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,318 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-130, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,318 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-129, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,319 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-130, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,319 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672916-1, cell_rru_id=56, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,320 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672916-1, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,321 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672916-1, cell_rru_id=55, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,321 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672916-1, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,322 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-129, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,322 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829492-129, cell_rru_id=51, alarm=RRU链路断
+2026-02-03 10:54:40,323 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-129, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,324 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-130, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,327 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829492-130, cell_rru_id=51, alarm=RRU链路断
+2026-02-03 10:54:40,328 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-130, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,328 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-130, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,329 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-130, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,330 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-129, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,330 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-129, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,331 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-169, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,331 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829492-169, cell_rru_id=51, alarm=RRU链路断
+2026-02-03 10:54:40,332 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-169, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,332 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-169, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,333 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-169, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,334 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=52, alarm=DU小区退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,334 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672933-1, cell_rru_id=52, alarm=DU小区退服
+2026-02-03 10:54:40,334 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,337 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=52, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,338 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=51, alarm=DU小区退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,339 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672933-1, cell_rru_id=51, alarm=DU小区退服
+2026-02-03 10:54:40,339 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,340 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672933-1, cell_rru_id=51, alarm=RRU链路断
+2026-02-03 10:54:40,341 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=51, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,341 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-169, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,342 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-169, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,343 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829492-169, cell_rru_id=53, alarm=RRU链路断
+2026-02-03 10:54:40,343 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-169, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,344 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-169, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,345 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-129, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,345 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-129, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,346 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-129, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,346 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-129, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,349 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829492-129, cell_rru_id=53, alarm=RRU链路断
+2026-02-03 10:54:40,350 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-130, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,350 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-130, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,351 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-829492-130, cell_rru_id=53, alarm=RRU链路断
+2026-02-03 10:54:40,351 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-130, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,352 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-130, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,353 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=53, alarm=DU小区退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,354 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672933-1, cell_rru_id=53, alarm=DU小区退服
+2026-02-03 10:54:40,354 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,355 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,355 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672933-1, cell_rru_id=53, alarm=RRU链路断
+2026-02-03 10:54:40,356 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=54, alarm=DU小区退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,357 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672933-1, cell_rru_id=54, alarm=DU小区退服
+2026-02-03 10:54:40,360 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,360 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,361 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-130, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,361 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-130, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,362 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-129, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,363 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-129, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,364 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-129, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,364 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-129, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,365 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-130, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,365 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-130, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,366 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-169, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,366 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-169, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,367 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-169, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,367 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829492-169, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,368 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=55, alarm=DU小区退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,369 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672933-1, cell_rru_id=55, alarm=DU小区退服
+2026-02-03 10:54:40,373 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,373 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=55, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,374 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=56, alarm=DU小区退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,375 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672933-1, cell_rru_id=56, alarm=DU小区退服
+2026-02-03 10:54:40,375 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=51, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,376 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672933-1, cell_rru_id=56, alarm=RRU链路断, matched_rru_id=53, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,384 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672904-1, cell_rru_id=52, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,384 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672904-1, cell_rru_id=52, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,385 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672904-1, cell_rru_id=51, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,385 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672904-1, cell_rru_id=51, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,388 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672904-1, cell_rru_id=53, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,388 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672904-1, cell_rru_id=53, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,389 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672904-1, cell_rru_id=54, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,389 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672904-1, cell_rru_id=54, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,391 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672904-1, cell_rru_id=55, alarm=超级小区CP退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,392 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672904-1, cell_rru_id=55, alarm= 超级小区CP退服
+2026-02-03 10:54:40,393 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672904-1, cell_rru_id=55, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,393 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672904-1, cell_rru_id=56, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,394 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672904-1, cell_rru_id=56, alarm=超级小区CP退服, matched_rru_id=, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,394 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12672904-1, cell_rru_id=56, alarm= 超级小区CP退服
+2026-02-03 10:54:40,422 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-194, cell_rru_id=54, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,423 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-306073-194, cell_rru_id=54, alarm= 天馈驻波比异常
+2026-02-03 10:54:40,424 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-194, cell_rru_id=53, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,425 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-193, cell_rru_id=53, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,426 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-193, cell_rru_id=54, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,426 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-306073-193, cell_rru_id=54, alarm= 天馈驻波比异常
+2026-02-03 10:54:40,427 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-233, cell_rru_id=54, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,427 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-306073-233, cell_rru_id=54, alarm= 天馈驻波比异常
+2026-02-03 10:54:40,428 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-233, cell_rru_id=53, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,429 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12636112-1, cell_rru_id=53, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,429 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12636112-1, cell_rru_id=54, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=True
+2026-02-03 10:54:40,430 - services.hsr_health_check - INFO - [告警已添加] CGI=460-00-12636112-1, cell_rru_id=54, alarm= 天馈驻波比异常
+2026-02-03 10:54:40,431 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-233, cell_rru_id=56, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,432 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-233, cell_rru_id=55, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,433 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-194, cell_rru_id=55, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,433 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-193, cell_rru_id=56, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,437 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-193, cell_rru_id=55, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,437 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-194, cell_rru_id=56, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,438 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12636112-1, cell_rru_id=55, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,439 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12636112-1, cell_rru_id=56, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,439 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-194, cell_rru_id=58, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,440 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-194, cell_rru_id=57, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,440 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-193, cell_rru_id=58, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,441 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-193, cell_rru_id=57, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,442 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-233, cell_rru_id=58, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,442 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-233, cell_rru_id=57, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,443 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12636112-1, cell_rru_id=58, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,443 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12636112-1, cell_rru_id=57, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,722 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-169, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,723 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-169, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,725 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-129, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,725 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-129, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,726 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-130, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,726 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-829868-130, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,727 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672916-1, cell_rru_id=53, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,727 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672916-1, cell_rru_id=53, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,728 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672916-1, cell_rru_id=54, alarm=超级小区CP退服, matched_rru_id=, cpid_match=False, rru_match=True
+2026-02-03 10:54:40,729 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12672916-1, cell_rru_id=54, alarm=RRU链路断, matched_rru_id=52, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,767 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-193, cell_rru_id=52, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,768 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-194, cell_rru_id=51, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,769 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-194, cell_rru_id=52, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,770 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-233, cell_rru_id=51, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,771 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-233, cell_rru_id=52, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,771 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-306073-193, cell_rru_id=51, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,772 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12636112-1, cell_rru_id=52, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,772 - services.hsr_health_check - INFO - [告警分配调试] CGI=460-00-12636112-1, cell_rru_id=51, alarm=天馈驻波比异常, matched_rru_id=54, cpid_match=True, rru_match=False
+2026-02-03 10:54:40,808 - __main__ - INFO - 健康检查执行完成，耗时: 2.07 秒
+2026-02-03 10:54:40,809 - __main__ - INFO - 分析测试结果...
+2026-02-03 10:54:40,812 - __main__ - INFO -
+=== 高铁健康检查流量匹配测试报告 ===
+2026-02-03 10:54:40,812 - __main__ - INFO - 测试时间: 2026-02-03 10:54:40
+2026-02-03 10:54:40,813 - __main__ - INFO - 执行时间: 2.07 秒
+2026-02-03 10:54:40,813 - __main__ - INFO - 总小区数: 3000
+2026-02-03 10:54:40,814 - __main__ - INFO - 有性能数据的小区数: 0 (0.00%)
+2026-02-03 10:54:40,814 - __main__ - INFO - 流量大于0的小区数: 0 (0.00%)
+2026-02-03 10:54:40,815 - __main__ - INFO - 有忙时利用率数据的小区数: 0 (0.00%)
+2026-02-03 10:54:40,816 - __main__ - INFO -
+=== 失败原因分析 ===
+2026-02-03 10:54:40,817 - __main__ - INFO - 无性能数据的小区数: 3000
+2026-02-03 10:54:40,817 - __main__ - INFO - 流量为0的小区数: 0
+2026-02-03 10:54:40,818 - __main__ - INFO -
+=== 成功匹配示例 ===
+2026-02-03 10:54:40,819 - __main__ - INFO -
+=== 测试总结 ===
+2026-02-03 10:54:40,822 - __main__ - INFO - ✗ 流量匹配修复效果不佳，需要进一步调整
+2026-02-03 10:54:40,823 - __main__ - INFO -
+=== PostgreSQL连接状态 ===
+2026-02-03 10:54:40,825 - __main__ - INFO - ✓ PostgreSQL连接正常
+2026-02-03 10:54:40,826 - db.mysql - INFO - MySQL 连接已关闭
+2026-02-03 10:54:40,826 - __main__ - INFO - MySQL连接已关闭
+2026-02-03 10:54:40,826 - __main__ - WARNING - 关闭数据库连接时出错: 'PostgresClient' object has no attribute 'close'
+
+D:\AutoTools\corba_parser_2026\monitor_app>

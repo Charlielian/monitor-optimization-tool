@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}保障小区体检{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- 面包屑导航 -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('grid.grid') }}">网格监控</a></li>
+            <li class="breadcrumb-item active">保障小区体检</li>
+        </ol>
+    </nav>
+
+    <!-- 标题和操作栏 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="bi bi-heart-pulse"></i> 保障小区体检
+            </h2>
+            <small class="text-muted">体检时间: {{ check_time.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+        </div>
+        <div>
+            <a href="{{ url_for('grid.export_guarantee_health_check') }}" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel"></i> 导出体检结果
+            </a>
+            <a href="{{ url_for('grid.grid') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> 返回网格监控
+            </a>
+        </div>
+    </div>
+
+    <!-- 体检汇总卡片 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">总小区数</h5>
+                    <h2 class="text-primary">{{ total_cells }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">健康小区</h5>
+                    <h2 class="text-success">{{ healthy_cells }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">不健康小区</h5>
+                    <h2 class="text-danger">{{ unhealthy_cells }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted">健康率</h5>
+                    <h2 class="text-info">{{ healthy_rate }}%</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 保障小区体检结果表格 -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-list-check"></i> 保障小区体检结果</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive table-fixed-header">
+                <table class="table table-hover" id="healthCheckTable">
+                    <thead class="table-light sticky-header">
+                        <tr>
+                            <th>场景名</th>
+                            <th>小区名称</th>
+                            <th>CGI</th>
+                            <th>制式</th>
+                            <th>健康状态</th>
+                            <th>原因</th>
+                            <th>是否有性能数据</th>
+                            <th>当日累计流量(GB)</th>
+                            <th>是否有告警</th>
+                            <th>告警明细</th>
+                            <th>前一日忙时利用率(%)</th>
+                            <th>当日忙时利用率(%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cell in cells %}
+                        <tr class="{{ 'table-success' if cell.status == '健康' else 'table-danger' }}">
+                            <td>{{ cell.scene_name }}</td>
+                            <td>{{ cell.celname }}</td>
+                            <td><code>{{ cell.cgi }}</code></td>
+                            <td>
+                                <span class="badge bg-{{ 'primary' if cell.network_type == '4g' else 'success' }}">
+                                    {{ cell.network_type|upper }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if cell.status == '健康' else 'danger' }}">
+                                    {{ cell.status }}
+                                </span>
+                            </td>
+                            <td>{{ cell.reason }}</td>
+                            <td>{{ cell.has_performance }}</td>
+                            <td>{{ "%.4f"|format(cell.today_traffic_gb) }}</td>
+                            <td>{{ cell.has_alarm }}</td>
+                            <td>{{ cell.alarm_details }}</td>
+                            <td>{{ "%.2f"|format(cell.yesterday_busy_hour_util) }}%</td>
+                            <td>{{ "%.2f"|format(cell.today_busy_hour_util) }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 无流量小区列表 -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> 无流量小区列表 ({{ (no_traffic_cells|length) }})</h5>
+                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#noTrafficCollapse" aria-expanded="true" aria-controls="noTrafficCollapse">
+                    <i class="bi bi-chevron-down" id="noTrafficIcon"></i>
+                </button>
+            </div>
+        </div>
+        <div class="collapse show" id="noTrafficCollapse">
+            <div class="card-body">
+                {% if no_traffic_cells %}
+                    <div class="table-responsive table-fixed-header">
+                        <table class="table table-hover" id="noTrafficTable">
+                            <thead class="table-light sticky-header">
+                                <tr>
+                                    <th>场景名</th>
+                                    <th>小区名称</th>
+                                    <th>CGI</th>
+                                    <th>制式</th>
+                                    <th>健康状态</th>
+                                    <th>原因</th>
+                                    <th>是否有告警</th>
+                                    <th>告警明细</th>
+                                    <th>前一日忙时利用率(%)</th>
+                                    <th>当日忙时利用率(%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cell in no_traffic_cells %}
+                                <tr class="table-warning">
+                                    <td>{{ cell.scene_name }}</td>
+                                    <td>{{ cell.celname }}</td>
+                                    <td><code>{{ cell.cgi }}</code></td>
+                                    <td>
+                                        <span class="badge bg-{{ 'primary' if cell.network_type == '4g' else 'success' }}">
+                                            {{ cell.network_type|upper }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger">
+                                            {{ cell.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ cell.reason }}</td>
+                                    <td>{{ cell.has_alarm }}</td>
+                                    <td>{{ cell.alarm_details }}</td>
+                                    <td>{{ "%.2f"|format(cell.yesterday_busy_hour_util) }}%</td>
+                                    <td>{{ "%.2f"|format(cell.today_busy_hour_util) }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle"></i> 暂无无流量小区
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 无性能数据小区列表 -->
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-x-circle"></i> 无性能数据小区列表 ({{ (no_performance_cells|length) }})</h5>
+                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#noPerformanceCollapse" aria-expanded="true" aria-controls="noPerformanceCollapse">
+                    <i class="bi bi-chevron-down" id="noPerformanceIcon"></i>
+                </button>
+            </div>
+        </div>
+        <div class="collapse show" id="noPerformanceCollapse">
+            <div class="card-body">
+                {% if no_performance_cells %}
+                    <div class="table-responsive table-fixed-header">
+                        <table class="table table-hover" id="noPerformanceTable">
+                            <thead class="table-light sticky-header">
+                                <tr>
+                                    <th>场景名</th>
+                                    <th>小区名称</th>
+                                    <th>CGI</th>
+                                    <th>制式</th>
+                                    <th>健康状态</th>
+                                    <th>原因</th>
+                                    <th>是否有告警</th>
+                                    <th>告警明细</th>
+                                    <th>前一日忙时利用率(%)</th>
+                                    <th>当日忙时利用率(%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cell in no_performance_cells %}
+                                <tr class="table-danger">
+                                    <td>{{ cell.scene_name }}</td>
+                                    <td>{{ cell.celname }}</td>
+                                    <td><code>{{ cell.cgi }}</code></td>
+                                    <td>
+                                        <span class="badge bg-{{ 'primary' if cell.network_type == '4g' else 'success' }}">
+                                            {{ cell.network_type|upper }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger">
+                                            {{ cell.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ cell.reason }}</td>
+                                    <td>{{ cell.has_alarm }}</td>
+                                    <td>{{ cell.alarm_details }}</td>
+                                    <td>{{ "%.2f"|format(cell.yesterday_busy_hour_util) }}%</td>
+                                    <td>{{ "%.2f"|format(cell.today_busy_hour_util) }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle"></i> 暂无无性能数据小区
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* 固定表头样式 */
+.table-fixed-header {
+    max-height: 600px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8f9fa !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sticky-header th {
+    background-color: #f8f9fa !important;
+    border-bottom: 2px solid #dee2e6;
+}
+
+code {
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

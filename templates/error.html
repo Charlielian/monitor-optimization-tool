@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-lg border-0">
+        <div class="card-body text-center p-5">
+          <div class="mb-4">
+            <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 4rem;"></i>
+          </div>
+          <h2 class="card-title mb-3">服务暂时不可用</h2>
+          <p class="card-text text-muted mb-4">
+            {{ message or "系统服务暂时不可用，请稍后再试或联系管理员。" }}
+          </p>
+          <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">
+              <i class="bi bi-house-fill me-2"></i>返回首页
+            </a>
+            {% if auth_enabled and user_role == 'admin' %}
+            <a href="{{ url_for('admin.admin') }}" class="btn btn-outline-secondary">
+              <i class="bi bi-gear-fill me-2"></i>管理员控制台
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- 系统状态信息 -->
+      <div class="card mt-4 shadow-sm border-0">
+        <div class="card-body">
+          <h6 class="card-title mb-3">
+            <i class="bi bi-info-circle-fill text-info me-2"></i>系统状态
+          </h6>
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="d-flex align-items-center">
+                <span class="badge bg-{{ 'success' if health_pg else 'danger' }} me-2">
+                  {{ '●' if health_pg else '○' }}
+                </span>
+                <span class="small">PostgreSQL</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="d-flex align-items-center">
+                <span class="badge bg-{{ 'success' if health_mysql else 'danger' }} me-2">
+                  {{ '●' if health_mysql else '○' }}
+                </span>
+                <span class="small">MySQL</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="d-flex align-items-center">
+                <span class="badge bg-secondary me-2">○</span>
+                <span class="small">业务服务</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

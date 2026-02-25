@@ -1,0 +1,23 @@
+# 安装服务
+python flask_service.py install
+
+# 安装并设置开机自启动
+python flask_service.py --startup=auto install
+
+# 启动服务
+python flask_service.py start
+
+# 停止服务
+python flask_service.py stop
+
+# 重启服务
+python flask_service.py restart
+
+# 卸载服务
+python flask_service.py remove
+
+# 查看当前配置
+python flask_service.py config
+
+# 调试模式运行（非服务模式）
+python flask_service.py debug

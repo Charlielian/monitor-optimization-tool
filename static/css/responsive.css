@@ -1,0 +1,696 @@
+/* 
+ * 响应式增强样式
+ * 确保页面在不同浏览器和屏幕尺寸下都能正常显示
+ */
+
+/* ==================== 基础响应式设置 ==================== */
+
+/* 确保所有元素使用border-box模型 */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* 防止水平滚动 */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* 响应式图片 */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ==================== 导航栏响应式 ==================== */
+
+/* 小屏幕：导航栏优化 */
+@media (max-width: 991px) {
+  .navbar-collapse {
+    background: var(--primary-color);
+    padding: 1rem;
+    margin-top: 0.5rem;
+    border-radius: 4px;
+  }
+  
+  .navbar-nav {
+    gap: 0.5rem;
+  }
+  
+  .navbar-nav .nav-item {
+    width: 100%;
+  }
+  
+  .navbar-nav .nav-link {
+    padding: 0.75rem 1rem !important;
+    border-radius: 4px;
+  }
+  
+  /* 导航栏右侧信息垂直排列 */
+  .navbar .d-flex.align-items-center {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.75rem;
+    width: 100%;
+    margin-top: 1rem;
+  }
+  
+  .navbar .d-flex.align-items-center > div {
+    width: 100%;
+  }
+}
+
+/* 超小屏幕：进一步优化 */
+@media (max-width: 576px) {
+  .navbar-brand {
+    font-size: 1rem;
+  }
+  
+  .navbar-brand i {
+    display: none;
+  }
+}
+
+/* ==================== 主内容区域响应式 ==================== */
+
+/* 大屏幕 - 移除max-width限制，充分利用宽屏空间 */
+@media (min-width: 1400px) {
+  main.container-fluid {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+}
+
+/* 中等屏幕 */
+@media (min-width: 992px) and (max-width: 1399px) {
+  main.container-fluid {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* 小屏幕 */
+@media (max-width: 991px) {
+  main.container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    margin-top: 70px !important;
+  }
+}
+
+/* 超小屏幕 */
+@media (max-width: 576px) {
+  main.container-fluid {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    margin-top: 65px !important;
+  }
+}
+
+/* ==================== 卡片响应式 ==================== */
+
+/* 小屏幕：卡片间距调整 */
+@media (max-width: 768px) {
+  .card {
+    margin-bottom: 1rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .card-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .card-header h5, .card-header h6 {
+    font-size: 1rem;
+  }
+}
+
+/* 超小屏幕：进一步压缩 */
+@media (max-width: 576px) {
+  .card-body {
+    padding: 0.75rem;
+  }
+  
+  .card-header {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .card-header h5, .card-header h6 {
+    font-size: 0.9rem;
+  }
+}
+
+/* ==================== 表格响应式 ==================== */
+
+/* 表格容器响应式 */
+.table-responsive, .table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 小屏幕：表格字体调整 */
+@media (max-width: 768px) {
+  .table {
+    font-size: 0.875rem;
+  }
+  
+  .table th, .table td {
+    padding: 0.5rem;
+    white-space: nowrap;
+  }
+  
+  .table-container {
+    max-height: 400px;
+  }
+}
+
+/* 超小屏幕：表格进一步优化 */
+@media (max-width: 576px) {
+  .table {
+    font-size: 0.75rem;
+  }
+  
+  .table th, .table td {
+    padding: 0.375rem;
+  }
+  
+  .table-container {
+    max-height: 350px;
+  }
+  
+  /* 隐藏不重要的列 */
+  .table .d-none-mobile {
+    display: none;
+  }
+}
+
+/* ==================== 表单响应式 ==================== */
+
+/* 小屏幕：表单元素全宽 */
+@media (max-width: 768px) {
+  .form-control, .form-select, .btn {
+    font-size: 1rem;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  /* 表单行改为垂直排列 */
+  .row.g-3 > [class*="col-"] {
+    margin-bottom: 0.75rem;
+  }
+  
+  /* 按钮组垂直排列 */
+  .btn-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .btn-group .btn {
+    width: 100%;
+    border-radius: 4px !important;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* 超小屏幕：表单进一步优化 */
+@media (max-width: 576px) {
+  .form-label {
+    font-size: 0.875rem;
+  }
+  
+  .form-control-sm, .form-select-sm {
+    font-size: 0.875rem;
+  }
+}
+
+/* ==================== 按钮响应式 ==================== */
+
+/* 小屏幕：按钮全宽 */
+@media (max-width: 576px) {
+  .btn:not(.btn-sm):not(.btn-lg) {
+    padding: 0.625rem 1rem;
+    font-size: 1rem;
+  }
+  
+  /* 卡片头部按钮 */
+  .card-header .btn {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+  
+  /* 按钮组 */
+  .d-flex .btn {
+    flex: 1;
+  }
+}
+
+/* ==================== 网格系统响应式 ==================== */
+
+/* 小屏幕：列间距调整 */
+@media (max-width: 768px) {
+  .row {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+  }
+  
+  .row > [class*="col-"] {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
+/* 超小屏幕：列全宽 */
+@media (max-width: 576px) {
+  .row {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .row > [class*="col-"] {
+    padding-left: 0;
+    padding-right: 0;
+    margin-bottom: 1rem;
+  }
+  
+  /* 强制所有列全宽 */
+  [class*="col-md-"],
+  [class*="col-lg-"],
+  [class*="col-xl-"] {
+    width: 100%;
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+/* ==================== 图表响应式 ==================== */
+
+/* 图表容器响应式高度 */
+.chart-container {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (max-width: 576px) {
+  .chart-container {
+    min-height: 250px !important;
+    max-height: 300px !important;
+  }
+}
+
+@media (min-width: 577px) and (max-width: 768px) {
+  .chart-container {
+    min-height: 300px !important;
+    max-height: 350px !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .chart-container {
+    min-height: 350px !important;
+    max-height: 400px !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .chart-container {
+    min-height: 400px !important;
+    max-height: 500px !important;
+  }
+}
+
+/* ==================== 徽章和标签响应式 ==================== */
+
+/* 小屏幕：徽章字体调整 */
+@media (max-width: 576px) {
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+}
+
+/* ==================== 模态框响应式 ==================== */
+
+/* 小屏幕：模态框全屏 */
+@media (max-width: 576px) {
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+  
+  .modal-content {
+    border-radius: 4px;
+  }
+  
+  .modal-header, .modal-footer {
+    padding: 0.75rem;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+}
+
+/* ==================== 下拉菜单响应式 ==================== */
+
+/* 小屏幕：下拉菜单全宽 */
+@media (max-width: 576px) {
+  .dropdown-menu {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* ==================== 分页响应式 ==================== */
+
+/* 小屏幕：分页按钮调整 */
+@media (max-width: 576px) {
+  .pagination {
+    font-size: 0.875rem;
+  }
+  
+  .pagination .page-link {
+    padding: 0.375rem 0.625rem;
+  }
+  
+  /* 隐藏部分页码 */
+  .pagination .page-item:not(.active):not(:first-child):not(:last-child):not(:nth-child(2)):not(:nth-last-child(2)) {
+    display: none;
+  }
+}
+
+/* ==================== 文本响应式 ==================== */
+
+/* 标题响应式 */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.75rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  h3 {
+    font-size: 1.25rem;
+  }
+  
+  h4 {
+    font-size: 1.1rem;
+  }
+  
+  h5 {
+    font-size: 1rem;
+  }
+  
+  h6 {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 576px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.25rem;
+  }
+  
+  h3 {
+    font-size: 1.1rem;
+  }
+  
+  h4, h5, h6 {
+    font-size: 1rem;
+  }
+}
+
+/* ==================== 间距响应式 ==================== */
+
+/* 小屏幕：减少间距 */
+@media (max-width: 768px) {
+  .mb-4 {
+    margin-bottom: 1.5rem !important;
+  }
+  
+  .mb-5 {
+    margin-bottom: 2rem !important;
+  }
+  
+  .mt-4 {
+    margin-top: 1.5rem !important;
+  }
+  
+  .mt-5 {
+    margin-top: 2rem !important;
+  }
+  
+  .py-4 {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+  
+  .py-5 {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .mb-3 {
+    margin-bottom: 0.75rem !important;
+  }
+  
+  .mb-4 {
+    margin-bottom: 1rem !important;
+  }
+  
+  .mb-5 {
+    margin-bottom: 1.5rem !important;
+  }
+  
+  .mt-3 {
+    margin-top: 0.75rem !important;
+  }
+  
+  .mt-4 {
+    margin-top: 1rem !important;
+  }
+  
+  .mt-5 {
+    margin-top: 1.5rem !important;
+  }
+}
+
+/* ==================== 页脚响应式 ==================== */
+
+/* 小屏幕：页脚垂直排列 */
+@media (max-width: 768px) {
+  .footer .row {
+    text-align: center;
+  }
+  
+  .footer .col-md-6 {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .footer .text-md-end {
+    text-align: center !important;
+  }
+}
+
+/* ==================== 工具类响应式 ==================== */
+
+/* 响应式显示/隐藏 */
+@media (max-width: 576px) {
+  .d-sm-none {
+    display: none !important;
+  }
+  
+  .d-sm-block {
+    display: block !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .d-md-none {
+    display: none !important;
+  }
+  
+  .d-md-block {
+    display: block !important;
+  }
+}
+
+@media (max-width: 992px) {
+  .d-lg-none {
+    display: none !important;
+  }
+  
+  .d-lg-block {
+    display: block !important;
+  }
+}
+
+/* ==================== 打印样式 ==================== */
+
+@media print {
+  /* 隐藏导航栏和页脚 */
+  .navbar, .footer {
+    display: none !important;
+  }
+  
+  /* 调整主内容区域 */
+  main.container-fluid {
+    margin-top: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* 卡片样式调整 */
+  .card {
+    border: 1px solid #000;
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+  
+  /* 按钮隐藏 */
+  .btn {
+    display: none !important;
+  }
+  
+  /* 表格优化 */
+  .table {
+    font-size: 10pt;
+  }
+  
+  /* 图表保持可见 */
+  .chart-container {
+    page-break-inside: avoid;
+  }
+}
+
+/* ==================== 浏览器兼容性 ==================== */
+
+/* IE11 兼容性 */
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  /* Flexbox 修复 */
+  .d-flex {
+    display: -ms-flexbox;
+    display: flex;
+  }
+  
+  .flex-column {
+    -ms-flex-direction: column;
+    flex-direction: column;
+  }
+  
+  /* Grid 降级 */
+  .row {
+    display: block;
+  }
+  
+  [class*="col-"] {
+    float: left;
+  }
+}
+
+/* Safari 兼容性 */
+@supports (-webkit-appearance: none) {
+  /* 修复 Safari 的 sticky 定位问题 */
+  .table-container .table thead th {
+    position: -webkit-sticky;
+    position: sticky;
+  }
+}
+
+/* Firefox 兼容性 */
+@-moz-document url-prefix() {
+  /* 修复 Firefox 的滚动条样式 */
+  .table-container {
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-disabled) var(--bg-gray);
+  }
+}
+
+/* ==================== 触摸设备优化 ==================== */
+
+/* 增加触摸目标大小 */
+@media (hover: none) and (pointer: coarse) {
+  .btn, .nav-link, .form-control, .form-select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .table th, .table td {
+    padding: 0.75rem;
+  }
+  
+  /* 禁用悬停效果 */
+  .btn:hover, .nav-link:hover, .card:hover {
+    transform: none;
+    box-shadow: inherit;
+  }
+}
+
+/* ==================== 高对比度模式 ==================== */
+
+@media (prefers-contrast: high) {
+  :root {
+    --border-color: #000;
+    --text-primary: #000;
+    --text-secondary: #333;
+  }
+  
+  .card, .table, .form-control, .btn {
+    border: 2px solid #000;
+  }
+}
+
+/* ==================== 减少动画模式 ==================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==================== 暗色模式支持 ==================== */
+
+@media (prefers-color-scheme: dark) {
+  /* 暗色模式变量（可选） */
+  :root {
+    --bg-color: #1a1a1a;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --border-color: #333333;
+    --bg-gray: #2a2a2a;
+  }
+  
+  /* 注意：需要在 body 上添加 .dark-mode 类才能启用 */
+  body.dark-mode {
+    background: var(--bg-color);
+    color: var(--text-primary);
+  }
+  
+  body.dark-mode .card {
+    background: var(--bg-gray);
+    border-color: var(--border-color);
+  }
+  
+  body.dark-mode .table {
+    background: var(--bg-gray);
+    color: var(--text-primary);
+  }
+}

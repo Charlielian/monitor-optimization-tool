@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title or "保障指标监控（Flask版）" }}</title>
+    <!-- 本地资源（离线环境优先） -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-icons.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-fix.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/widescreen.css') }}">
+    
+    <!-- 宽屏优化 - 内联样式确保优先级 -->
+    <style>
+      /* 强制覆盖容器padding，充分利用宽屏空间 */
+      @media (min-width: 1200px) {
+        body main.container-fluid {
+          padding-left: 10px !important;
+          padding-right: 10px !important;
+          max-width: 100% !important;
+        }
+      }
+      
+      @media (min-width: 1400px) {
+        body main.container-fluid {
+          padding-left: 15px !important;
+          padding-right: 15px !important;
+        }
+      }
+      
+      @media (min-width: 1920px) {
+        body main.container-fluid {
+          padding-left: 20px !important;
+          padding-right: 20px !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 导航栏 - 中国移动风格 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-gradient-primary mb-4" style="position: fixed; top: 0; left: 0; right: 0; z-index: 1030;">
+      <div class="container-fluid">
+        <a class="navbar-brand fw-bold text-white" href="{{ url_for('main.dashboard') }}">
+          <i class="bi bi-bar-chart-line-fill me-2"></i>保障指标监控系统
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            {% for key, text, href in nav_items %}
+            <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == key %}active fw-semibold{% endif %}" href="{{ href }}">{{ text }}</a>
+            </li>
+            {% endfor %}
+            {% if auth_enabled and current_user %}
+            <!-- 移动端登出链接 -->
+            <li class="nav-item d-lg-none">
+              <a class="nav-link text-warning" href="{{ url_for('logout') }}">
+                <i class="bi bi-box-arrow-right me-1"></i>退出登录
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+          <div class="d-flex align-items-center gap-3">
+            <!-- 数据库连接状态 -->
+            <div class="d-flex align-items-center gap-2 text-white" title="PostgreSQL 数据库连接状态">
+              <span class="small">PG:</span>
+              <span class="fw-bold">{{ '🟢' if health_pg else '🔴' }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 text-white" title="MySQL 数据库连接状态">
+              <span class="small">MySQL:</span>
+              <span class="fw-bold">{{ '🟢' if health_mysql else '🔴' }}</span>
+            </div>
+            {% if latest_ts %}
+            <div class="d-flex align-items-center gap-2 text-white">
+              <span class="small">最新4G:</span>
+              <span class="fw-bold">{{ latest_ts.get('4g') or '无' }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 text-white">
+              <span class="small">最新5G:</span>
+              <span class="fw-bold">{{ latest_ts.get('5g') or '无' }}</span>
+            </div>
+            {% endif %}
+            {% if auth_enabled and current_user %}
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-person-circle me-1"></i>{{ user_name or current_user }}
+                {% if user_role == 'admin' %}
+                <span class="badge bg-danger ms-1">管理员</span>
+                {% endif %}
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><h6 class="dropdown-header">{{ user_name or current_user }}</h6></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{{ url_for('session_info') }}">
+                  <i class="bi bi-clock-history me-2"></i>会话信息
+                </a></li>
+                {% if user_role == 'admin' %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{{ url_for('admin.admin') }}">
+                  <i class="bi bi-shield-lock me-2"></i>管理员控制台
+                </a></li>
+                <li><a class="dropdown-item" href="{{ url_for('scheduler.index') }}">
+                  <i class="bi bi-clock-history me-2"></i>计划任务管理
+                </a></li>
+                {% endif %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                  <i class="bi bi-box-arrow-right me-2"></i>退出登录
+                </a></li>
+              </ul>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <main class="container-fluid" style="margin-top: 80px; padding-left: 10px; padding-right: 10px;">
+      <!-- 消息提示 -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="row mb-4">
+            <div class="col-12">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <!-- 内容块 -->
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer mt-auto py-3 bg-light border-top mt-5">
+      <div class="container-fluid" style="padding-left: 10px; padding-right: 10px;">
+        <div class="row">
+          <div class="col-md-6">
+            <span class="text-muted small">保障指标监控系统 - Flask版</span>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <span class="text-muted small">© {{ g.current_year or 2024 }}</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Chart.js - 本地资源 -->
+    <script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
+    
+    <!-- Bootstrap JS - 本地资源（移除defer，确保导航栏功能立即可用） -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <!-- 全局 AJAX 工具库 -->
+    <script src="{{ url_for('static', filename='js/ajax-utils.js') }}" defer></script>
+    <!-- 性能监控（仅在开发环境启用） -->
+    <script src="{{ url_for('static', filename='js/chart-optimizer.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/performance-monitor.js') }}" defer></script>
+    <script>
+      // 检测关键资源是否加载成功
+      function checkResources() {
+        var warnings = [];
+        
+        // 检测是否通过 file:// 协议访问
+        if (window.location.protocol === 'file:') {
+          warnings.push({
+            bg: '#dc3545',
+            color: 'white',
+            msg: '❌ 错误：检测到您直接打开了 HTML 文件！请通过 Flask 应用访问：<br>1) 运行 "python3 app.py" 启动应用<br>2) 在浏览器访问 http://127.0.0.1:5000/<br>3) 或访问测试页面 http://127.0.0.1:5000/test_navigation'
+          });
+        }
+        
+        // 检测 Chart.js
+        if (typeof Chart === 'undefined') {
+          console.error('Chart.js 未加载！');
+          warnings.push({
+            bg: '#dc3545',
+            color: 'white',
+            msg: '⚠️ 警告：Chart.js 图表库未加载，图表功能将无法使用。请检查 static/js/chart.umd.min.js 文件是否存在。'
+          });
+        }
+        
+        // 检测 Bootstrap
+        if (typeof bootstrap === 'undefined') {
+          console.error('Bootstrap 未加载！');
+          warnings.push({
+            bg: '#ffc107',
+            color: 'black',
+            msg: '⚠️ 警告：Bootstrap 样式库未加载，页面样式可能异常。请检查 static/js/bootstrap.bundle.min.js 文件是否存在。'
+          });
+        }
+        
+        // 显示警告
+        if (warnings.length > 0) {
+          var warningHtml = warnings.map(function(w, idx) {
+            return '<div style="position:fixed;top:' + (idx * 80) + 'px;left:0;right:0;background:' + w.bg + ';color:' + w.color + ';padding:15px;text-align:center;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:14px;line-height:1.5;border-radius:0 0 8px 8px;">' + w.msg + '</div>';
+          }).join('');
+          document.body.insertAdjacentHTML('afterbegin', warningHtml);
+        } else {
+          console.log('✅ 所有资源加载成功！');
+        }
+      }
+      
+      // 页面加载完成后检测
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+          setTimeout(checkResources, 500);
+        });
+      } else {
+        setTimeout(checkResources, 500);
+      }
+    </script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
+

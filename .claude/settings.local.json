@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(python3:*)",
+      "Bash(chmod:*)",
+      "Bash(python -c \"\nfrom services.hsr_health_check import get_hsr_cell_health_status\nimport json\n\n# 测试网元12672936的小区健康状态\nresult = get_hsr_cell_health_status\\(''''12672936''''\\)\nprint\\(json.dumps\\(result, ensure_ascii=False, indent=2\\)\\)\n\")",
+      "Bash(python:*)",
+      "Bash(curl -s \"http://localhost:5010/api/hsr/health/12672936\")",
+      "Bash(ls:*)",
+      "Bash(find:*)"
+    ]
+  }
+}

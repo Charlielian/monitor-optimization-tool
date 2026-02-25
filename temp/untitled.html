@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阳江区域数据监控系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1a6fc4 0%, #0d4a8a 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .header-stats {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: flex;
+            margin-top: 0;
+            background-color: white;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        .map-container {
+            flex: 3;
+            position: relative;
+            padding: 20px;
+            border-right: 1px solid #eaeaea;
+        }
+        
+        .map-image {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .area-marker {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 12px 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 180px;
+            max-width: 220px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #3498db;
+            z-index: 10;
+        }
+        
+        .area-marker:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+        
+        .area-title {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .area-icon {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .area-data {
+            font-size: 13px;
+            color: #555;
+            margin: 5px 0;
+        }
+        
+        .data-label {
+            font-weight: 600;
+            color: #7f8c8d;
+            margin-right: 5px;
+        }
+        
+        .traffic-value {
+            color: #e74c3c;
+            font-weight: 700;
+        }
+        
+        .erlang-value {
+            color: #3498db;
+            font-weight: 700;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        
+        .status-normal {
+            background-color: #2ecc71;
+        }
+        
+        .status-warning {
+            background-color: #f39c12;
+        }
+        
+        .status-alert {
+            background-color: #e74c3c;
+        }
+        
+        .area-status {
+            font-size: 12px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar {
+            flex: 1;
+            padding: 25px;
+            background-color: #f9fafc;
+        }
+        
+        .sidebar-title {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eaeaea;
+        }
+        
+        .filter-section {
+            margin-bottom: 25px;
+        }
+        
+        .filter-title {
+            font-size: 15px;
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .filter-option {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-option:hover {
+            background-color: #f0f7ff;
+            border-color: #3498db;
+        }
+        
+        .filter-option.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        .data-list {
+            margin-top: 20px;
+        }
+        
+        .data-item {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #3498db;
+            transition: all 0.2s;
+        }
+        
+        .data-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .data-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .data-item-area {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .data-item-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+        
+        .legend {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .legend-title {
+            font-size: 15px;
+            color: #34495e;
+            margin-bottom: 12px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            margin-right: 10px;
+        }
+        
+        .legend-text {
+            font-size: 13px;
+            color: #555;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+            border-top: 1px solid #eaeaea;
+        }
+        
+        .update-time {
+            font-size: 12px;
+            color: #95a5a6;
+            margin-top: 15px;
+            text-align: right;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 1024px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .map-container {
+                border-right: none;
+                border-bottom: 1px solid #eaeaea;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .header-stats {
+                margin-top: 15px;
+                justify-content: space-between;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>阳江区域数据监控系统</h1>
+                <div class="header-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-traffic">234.3</div>
+                        <div class="stat-label">总流量(GB)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-erlang">41.5</div>
+                        <div class="stat-label">总话务量(万erl)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="active-areas">5</div>
+                        <div class="stat-label">活跃区域</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="map-container">
+                <!-- 地图图片 -->
+                <img src="https://via.placeholder.com/1000x700/4a6fa5/ffffff?text=阳江区域地图" alt="阳江区域地图" class="map-image" id="map-image">
+                
+                <!-- 区域标记点 - 这些会根据实际地图区域坐标放置 -->
+                <div class="area-marker" id="marker-yangxi" style="top: 30%; left: 15%;">
+                    <div class="area-title">
+                        <span class="area-icon" style="background-color: #e74c3c;"></span>
+                        阳西
+                    </div>
+                    <div class="area-data">
+                        <span class="data-label">流量:</span>
+                        <span class="traffic-value">78.5 GB</span>
+                    </div>
+                    <div class="area-data">
+                        <span class="data-label">话务量:</span>
+                        <span class="erlang-value">12.3 万erl</span>
+                    </div>
+                    <div class="area-status">
+                        <span class="status-indicator status-normal"></span>
+                        状态: 正常
+                    </div>
+                </div>
+                
+                <div class="area-marker" id="marker-yangchun" style="top: 60%; left: 40%;">
+                    <div class="area-title">
+                        <span class="area-icon" style="background-color: #f39c12;"></span>
+                        阳春
+                    </div>
+                    <div class="area-data">
+                        <span class="data-label">流量:</span>
+                        <span class="traffic-value">42.7 GB</span>
+                    </div>
+                    <div class="area-data">
+                        <span class="data-label">话务量:</span>
+                        <span class="erlang-value">8.9 万erl</span>
+                    </div>
+                    <div class="area-status">
+                        <span class="status-indicator status-normal"></span>
+                        状态: 正常
+                    </div>
+                </div>
+                
+                <div class="area-marker" id="marker-nanqu" style="top: 45%; left: 60%;">
+                    <div class="area-title">
+                        <span class="area-icon" style="background-color: #27ae60;"></span>
+                        南区
+                    </div>
+                    <div class="area-data">
+                        <span class="data-label">流量:</span>
+                        <span class="traffic-value">15.2 GB</span>
+                    </div>
+                    <div class="area-data">
+                        <span class="data-label">话务量:</span>
+                        <span class="erlang-value">3.4 万erl</span>
+                    </div>
+                    <div class="area-status">
+                        <span class="status-indicator status-normal"></span>
+                        状态: 正常
+                    </div>
+                </div>
+                
+                <div class="area-marker" id="marker-yangdong" style="top: 35%; left: 75%;">
+                    <div class="area-title">
+                        <span class="area-icon" style="background-color: #9b59b6;"></span>
+                        阳东
+                    </div>
+                    <div class="area-data">
+                        <span class="data-label">流量:</span>
+                        <span class="traffic-value">32.1 GB</span>
+                    </div>
+                    <div class="area-data">
+                        <span class="data-label">话务量:</span>
+                        <span class="erlang-value">6.7 万erl</span>
+                    </div>
+                    <div class="area-status">
+                        <span class="status-indicator status-warning"></span>
+                        状态: 维护中
+                    </div>
+                </div>
+                
+                <div class="area-marker" id="marker-jiangcheng" style="top: 55%; left: 80%;">
+                    <div class="area-title">
+                        <span class="area-icon" style="background-color: #3498db;"></span>
+                        江城
+                    </div>
+                    <div class="area-data">
+                        <span class="data-label">流量:</span>
+                        <span class="traffic-value">65.8 GB</span>
+                    </div>
+                    <div class="area-data">
+                        <span class="data-label">话务量:</span>
+                        <span class="erlang-value">10.2 万erl</span>
+                    </div>
+                    <div class="area-status">
+                        <span class="status-indicator status-normal"></span>
+                        状态: 正常
+                    </div>
+                </div>
+                
+                <div class="update-time">
+                    数据更新时间: <span id="current-time">2024-01-12 14:30:00</span>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <h3 class="sidebar-title">数据筛选</h3>
+                
+                <div class="filter-section">
+                    <div class="filter-title">流量等级</div>
+                    <div class="filter-options">
+                        <div class="filter-option active" data-filter="all">全部</div>
+                        <div class="filter-option" data-filter="high">高流量</div>
+                        <div class="filter-option" data-filter="medium">中流量</div>
+                        <div class="filter-option" data-filter="low">低流量</div>
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <div class="filter-title">区域状态</div>
+                    <div class="filter-options">
+                        <div class="filter-option active" data-status="all">全部</div>
+                        <div class="filter-option" data-status="normal">正常</div>
+                        <div class="filter-option" data-status="warning">维护</div>
+                        <div class="filter-option" data-status="alert">告警</div>
+                    </div>
+                </div>
+                
+                <div class="data-list">
+                    <h3 class="sidebar-title">区域数据列表</h3>
+                    
+                    <div class="data-item" data-area="yangxi">
+                        <div class="data-item-header">
+                            <div class="data-item-area">阳西</div>
+                            <div class="traffic-value">78.5 GB</div>
+                        </div>
+                        <div class="data-item-stats">
+                            <div>话务量: <span class="erlang-value">12.3 万erl</span></div>
+                            <div>状态: <span style="color: #2ecc71;">正常</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="data-item" data-area="yangchun">
+                        <div class="data-item-header">
+                            <div class="data-item-area">阳春</div>
+                            <div class="traffic-value">42.7 GB</div>
+                        </div>
+                        <div class="data-item-stats">
+                            <div>话务量: <span class="erlang-value">8.9 万erl</span></div>
+                            <div>状态: <span style="color: #2ecc71;">正常</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="data-item" data-area="nanqu">
+                        <div class="data-item-header">
+                            <div class="data-item-area">南区</div>
+                            <div class="traffic-value">15.2 GB</div>
+                        </div>
+                        <div class="data-item-stats">
+                            <div>话务量: <span class="erlang-value">3.4 万erl</span></div>
+                            <div>状态: <span style="color: #2ecc71;">正常</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="data-item" data-area="yangdong">
+                        <div class="data-item-header">
+                            <div class="data-item-area">阳东</div>
+                            <div class="traffic-value">32.1 GB</div>
+                        </div>
+                        <div class="data-item-stats">
+                            <div>话务量: <span class="erlang-value">6.7 万erl</span></div>
+                            <div>状态: <span style="color: #f39c12;">维护中</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="data-item" data-area="jiangcheng">
+                        <div class="data-item-header">
+                            <div class="data-item-area">江城</div>
+                            <div class="traffic-value">65.8 GB</div>
+                        </div>
+                        <div class="data-item-stats">
+                            <div>话务量: <span class="erlang-value">10.2 万erl</span></div>
+                            <div>状态: <span style="color: #2ecc71;">正常</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="legend">
+                    <h4 class="legend-title">图例说明</h4>
+                    
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #e74c3c;"></div>
+                        <div class="legend-text">高流量区域 (> 50GB)</div>
+                    </div>
+                    
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #f39c12;"></div>
+                        <div class="legend-text">中流量区域 (20-50GB)</div>
+                    </div>
+                    
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #27ae60;"></div>
+                        <div class="legend-text">低流量区域 (< 20GB)</div>
+                    </div>
+                    
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #9b59b6;"></div>
+                        <div class="legend-text">其他区域</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>阳江区域数据监控系统 &copy; 2024 | 数据每5分钟自动更新</p>
+        </div>
+    </div>
+
+    <script>
+        // 区域数据
+        const areaData = {
+            'yangxi': {
+                name: '阳西',
+                traffic: 78.5,
+                erlang: 12.3,
+                status: 'normal',
+                color: '#e74c3c'
+            },
+            'yangchun': {
+                name: '阳春',
+                traffic: 42.7,
+                erlang: 8.9,
+                status: 'normal',
+                color: '#f39c12'
+            },
+            'nanqu': {
+                name: '南区',
+                traffic: 15.2,
+                erlang: 3.4,
+                status: 'normal',
+                color: '#27ae60'
+            },
+            'yangdong': {
+                name: '阳东',
+                traffic: 32.1,
+                erlang: 6.7,
+                status: 'warning',
+                color: '#9b59b6'
+            },
+            'jiangcheng': {
+                name: '江城',
+                traffic: 65.8,
+                erlang: 10.2,
+                status: 'normal',
+                color: '#3498db'
+            }
+        };
+
+        // 更新页面数据
+        function updatePageData() {
+            // 更新总流量和话务量
+            let totalTraffic = 0;
+            let totalErlang = 0;
+            
+            Object.values(areaData).forEach(area => {
+                totalTraffic += area.traffic;
+                totalErlang += area.erlang;
+            });
+            
+            document.getElementById('total-traffic').textContent = totalTraffic.toFixed(1);
+            document.getElementById('total-erlang').textContent = totalErlang.toFixed(1);
+            document.getElementById('active-areas').textContent = Object.keys(areaData).length;
+            
+            // 更新时间
+            const now = new Date();
+            const timeString = now.toLocaleString('zh-CN');
+            document.getElementById('current-time').textContent = timeString;
+            
+            // 更新每个标记点的数据
+            Object.keys(areaData).forEach(areaId => {
+                const area = areaData[areaId];
+                const marker = document.getElementById(`marker-${areaId}`);
+                const listItem = document.querySelector(`.data-item[data-area="${areaId}"]`);
+                
+                if (marker) {
+                    marker.querySelector('.traffic-value').textContent = `${area.traffic.toFixed(1)} GB`;
+                    marker.querySelector('.erlang-value').textContent = `${area.erlang.toFixed(1)} 万erl`;
+                    marker.querySelector('.area-icon').style.backgroundColor = area.color;
+                    
+                    // 更新状态
+                    const statusIndicator = marker.querySelector('.status-indicator');
+                    statusIndicator.className = 'status-indicator';
+                    if (area.status === 'normal') {
+                        statusIndicator.classList.add('status-normal');
+                        marker.querySelector('.area-status').innerHTML = `<span class="status-indicator status-normal"></span>状态: 正常`;
+                    } else if (area.status === 'warning') {
+                        statusIndicator.classList.add('status-warning');
+                        marker.querySelector('.area-status').innerHTML = `<span class="status-indicator status-warning"></span>状态: 维护中`;
+                    } else {
+                        statusIndicator.classList.add('status-alert');
+                        marker.querySelector('.area-status').innerHTML = `<span class="status-indicator status-alert"></span>状态: 告警`;
+                    }
+                }
+                
+                if (listItem) {
+                    listItem.querySelector('.traffic-value').textContent = `${area.traffic.toFixed(1)} GB`;
+                    listItem.querySelector('.erlang-value').textContent = `${area.erlang.toFixed(1)} 万erl`;
+                }
+            });
+        }
+
+        // 筛选功能
+        function setupFilters() {
+            // 流量等级筛选
+            const trafficFilters = document.querySelectorAll('.filter-option[data-filter]');
+            trafficFilters.forEach(filter => {
+                filter.addEventListener('click', function() {
+                    // 移除其他流量筛选的active类
+                    trafficFilters.forEach(f => f.classList.remove('active'));
+                    // 给当前点击的添加active类
+                    this.classList.add('active');
+                    
+                    const filterValue = this.getAttribute('data-filter');
+                    filterAreas('traffic', filterValue);
+                });
+            });
+            
+            // 状态筛选
+            const statusFilters = document.querySelectorAll('.filter-option[data-status]');
+            statusFilters.forEach(filter => {
+                filter.addEventListener('click', function() {
+                    // 移除其他状态筛选的active类
+                    statusFilters.forEach(f => f.classList.remove('active'));
+                    // 给当前点击的添加active类
+                    this.classList.add('active');
+                    
+                    const filterValue = this.getAttribute('data-status');
+                    filterAreas('status', filterValue);
+                });
+            });
+        }
+        
+        // 区域筛选函数
+        function filterAreas(filterType, filterValue) {
+            const markers = document.querySelectorAll('.area-marker');
+            const listItems = document.querySelectorAll('.data-item');
+            
+            markers.forEach(marker => {
+                const areaId = marker.id.replace('marker-', '');
+                const area = areaData[areaId];
+                let shouldShow = true;
+                
+                if (filterType === 'traffic' && filterValue !== 'all') {
+                    if (filterValue === 'high' && area.traffic <= 50) shouldShow = false;
+                    if (filterValue === 'medium' && (area.traffic <= 20 || area.traffic > 50)) shouldShow = false;
+                    if (filterValue === 'low' && area.traffic > 20) shouldShow = false;
+                }
+                
+                if (filterType === 'status' && filterValue !== 'all') {
+                    if (filterValue === 'normal' && area.status !== 'normal') shouldShow = false;
+                    if (filterValue === 'warning' && area.status !== 'warning') shouldShow = false;
+                    if (filterValue === 'alert' && area.status !== 'alert') shouldShow = false;
+                }
+                
+                if (shouldShow) {
+                    marker.style.display = 'block';
+                } else {
+                    marker.style.display = 'none';
+                }
+            });
+            
+            // 同时筛选列表项
+            listItems.forEach(item => {
+                const areaId = item.getAttribute('data-area');
+                const area = areaData[areaId];
+                let shouldShow = true;
+                
+                if (filterType === 'traffic' && filterValue !== 'all') {
+                    if (filterValue === 'high' && area.traffic <= 50) shouldShow = false;
+                    if (filterValue === 'medium' && (area.traffic <= 20 || area.traffic > 50)) shouldShow = false;
+                    if (filterValue === 'low' && area.traffic > 20) shouldShow = false;
+                }
+                
+                if (filterType === 'status' && filterValue !== 'all') {
+                    if (filterValue === 'normal' && area.status !== 'normal') shouldShow = false;
+                    if (filterValue === 'warning' && area.status !== 'warning') shouldShow = false;
+                    if (filterValue === 'alert' && area.status !== 'alert') shouldShow = false;
+                }
+                
+                if (shouldShow) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // 交互功能：点击列表项高亮对应标记
+        function setupInteractions() {
+            const listItems = document.querySelectorAll('.data-item');
+            const markers = document.querySelectorAll('.area-marker');
+            
+            listItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const areaId = this.getAttribute('data-area');
+                    
+                    // 移除所有的高亮
+                    markers.forEach(marker => {
+                        marker.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                        marker.style.transform = 'translateY(0)';
+                    });
+                    
+                    // 高亮对应的标记
+                    const marker = document.getElementById(`marker-${areaId}`);
+                    if (marker) {
+                        marker.style.boxShadow = '0 8px 20px rgba(52, 152, 219, 0.4)';
+                        marker.style.transform = 'translateY(-10px)';
+                        marker.style.zIndex = '200';
+                        
+                        // 5秒后恢复
+                        setTimeout(() => {
+                            marker.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                            marker.style.transform = 'translateY(0)';
+                            marker.style.zIndex = '10';
+                        }, 5000);
+                    }
+                });
+            });
+            
+            // 标记点悬停效果增强
+            markers.forEach(marker => {
+                marker.addEventListener('mouseenter', function() {
+                    this.style.zIndex = '100';
+                });
+                
+                marker.addEventListener('mouseleave', function() {
+                    this.style.zIndex = '10';
+                });
+            });
+        }
+
+        // 模拟数据更新
+        function simulateDataUpdate() {
+            // 随机更新一个区域的数据
+            const areaIds = Object.keys(areaData);
+            const randomAreaId = areaIds[Math.floor(Math.random() * areaIds.length)];
+            const area = areaData[randomAreaId];
+            
+            // 随机增加或减少流量和话务量
+            const trafficChange = (Math.random() - 0.5) * 5;
+            const erlangChange = (Math.random() - 0.5) * 1;
+            
+            area.traffic = Math.max(0.1, area.traffic + trafficChange);
+            area.erlang = Math.max(0.1, area.erlang + erlangChange);
+            
+            // 偶尔改变状态
+            if (Math.random() < 0.05) {
+                const statuses = ['normal', 'warning', 'alert'];
+                area.status = statuses[Math.floor(Math.random() * statuses.length)];
+            }
+            
+            updatePageData();
+            
+            // 每30秒更新一次数据
+            setTimeout(simulateDataUpdate, 30000);
+        }
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePageData();
+            setupFilters();
+            setupInteractions();
+            
+            // 开始模拟数据更新
+            setTimeout(simulateDataUpdate, 30000);
+            
+            // 每5分钟刷新页面数据（模拟从服务器获取）
+            setInterval(updatePageData, 300000);
+        });
+    </script>
+</body>
+</html>

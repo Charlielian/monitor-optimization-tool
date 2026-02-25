@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS加载测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .info-box {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        .container-test {
+            background: #e3f2fd;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <h1>CSS和容器宽度测试</h1>
+    
+    <div class="info-box">
+        <h2>屏幕信息</h2>
+        <p>屏幕宽度: <strong id="screenWidth"></strong>px</p>
+        <p>窗口宽度: <strong id="windowWidth"></strong>px</p>
+        <p>Body宽度: <strong id="bodyWidth"></strong>px</p>
+    </div>
+    
+    <div class="info-box">
+        <h2>容器测试</h2>
+        <div class="container-test" id="testContainer">
+            <p>这是一个测试容器</p>
+            <p>容器宽度: <strong id="containerWidth"></strong>px</p>
+            <p>容器padding-left: <strong id="paddingLeft"></strong></p>
+            <p>容器padding-right: <strong id="paddingRight"></strong></p>
+        </div>
+    </div>
+    
+    <div class="info-box">
+        <h2>CSS文件加载检查</h2>
+        <p>检查 widescreen.css 是否加载...</p>
+        <div id="cssCheck"></div>
+    </div>
+    
+    <div class="info-box">
+        <h2>返回</h2>
+        <a href="/">返回首页</a>
+    </div>
+    
+    <script>
+        function updateInfo() {
+            // 屏幕信息
+            document.getElementById('screenWidth').textContent = screen.width;
+            document.getElementById('windowWidth').textContent = window.innerWidth;
+            document.getElementById('bodyWidth').textContent = document.body.offsetWidth;
+            
+            // 容器信息
+            const container = document.getElementById('testContainer');
+            const styles = window.getComputedStyle(container);
+            document.getElementById('containerWidth').textContent = container.offsetWidth;
+            document.getElementById('paddingLeft').textContent = styles.paddingLeft;
+            document.getElementById('paddingRight').textContent = styles.paddingRight;
+        }
+        
+        // 检查CSS文件
+        function checkCSS() {
+            const cssCheck = document.getElementById('cssCheck');
+            let found = false;
+            
+            for (let i = 0; i < document.styleSheets.length; i++) {
+                const sheet = document.styleSheets[i];
+                if (sheet.href && sheet.href.includes('widescreen.css')) {
+                    found = true;
+                    cssCheck.innerHTML = '<p class="success">✓ widescreen.css 已加载</p>';
+                    cssCheck.innerHTML += '<p>文件路径: ' + sheet.href + '</p>';
+                    break;
+                }
+            }
+            
+            if (!found) {
+                cssCheck.innerHTML = '<p class="error">✗ widescreen.css 未找到</p>';
+            }
+            
+            // 列出所有CSS文件
+            cssCheck.innerHTML += '<h3>所有加载的CSS文件:</h3><ul>';
+            for (let i = 0; i < document.styleSheets.length; i++) {
+                const sheet = document.styleSheets[i];
+                if (sheet.href) {
+                    cssCheck.innerHTML += '<li>' + sheet.href + '</li>';
+                }
+            }
+            cssCheck.innerHTML += '</ul>';
+        }
+        
+        // 初始化
+        updateInfo();
+        checkCSS();
+        
+        // 监听窗口大小变化
+        window.addEventListener('resize', updateInfo);
+    </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>宽度测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #f0f0f0;
+        }
+        
+        .test-container {
+            background: #fff;
+            margin: 20px auto;
+            padding: 20px;
+            border: 2px solid #333;
+        }
+        
+        .full-width {
+            width: 100%;
+            background: #e3f2fd;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        
+        .with-padding {
+            width: 100%;
+            background: #fff3e0;
+            padding: 20px;
+            margin: 10px 0;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+        
+        .info {
+            background: #e8f5e9;
+            padding: 10px;
+            margin: 5px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>宽度测试</h1>
+        
+        <div class="info">
+            <strong>屏幕宽度:</strong> <span id="screen"></span>px<br>
+            <strong>窗口宽度:</strong> <span id="window"></span>px<br>
+            <strong>Body宽度:</strong> <span id="body"></span>px
+        </div>
+        
+        <div class="full-width">
+            <strong>100%宽度容器</strong><br>
+            宽度: <span id="full"></span>px
+        </div>
+        
+        <div class="with-padding">
+            <strong>带padding的容器 (padding: 10px)</strong><br>
+            宽度: <span id="padded"></span>px
+        </div>
+        
+        <h2>说明</h2>
+        <p>如果窗口宽度和容器宽度相差很大（超过100px），说明有额外的padding或margin。</p>
+        <p>理想情况：窗口宽度 - 容器宽度 ≈ 20-40px（左右padding各10-20px）</p>
+    </div>
+    
+    <script>
+        function update() {
+            document.getElementById('screen').textContent = screen.width;
+            document.getElementById('window').textContent = window.innerWidth;
+            document.getElementById('body').textContent = document.body.offsetWidth;
+            document.getElementById('full').textContent = document.querySelector('.full-width').offsetWidth;
+            document.getElementById('padded').textContent = document.querySelector('.with-padding').offsetWidth;
+        }
+        
+        update();
+        window.addEventListener('resize', update);
+    </script>
+</body>
+</html>
